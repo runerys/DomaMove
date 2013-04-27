@@ -1,0 +1,50 @@
+﻿<UserControl x:Class="DomaMove.MoveView"
+              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300" MinHeight="350" Width="800">
+
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top">
+            <GroupBox Header="Source">
+                <StackPanel Orientation="Horizontal">
+                    <Label>Server</Label>
+                    <TextBox x:Name="Source_Url" Width="250"/>
+                    <Label>Username</Label>
+                    <TextBox x:Name="Source_Username" Width="100" />
+                    <Label>Password</Label>
+                    <TextBox x:Name="Source_Password" Width="100" />
+                    <Button x:Name="TestSourceConnection" Content="Test connection" />
+                    <Label x:Name="Source_Status" />
+                </StackPanel>
+            </GroupBox>
+            <GroupBox Header="Target">
+                <StackPanel Orientation="Horizontal">
+                    <Label>Server</Label>
+                    <TextBox x:Name="Target_Url" Width="250"/>
+                    <Label>Username</Label>
+                    <TextBox x:Name="Target_Username" Width="100" />
+                    <Label>Password</Label>
+                    <TextBox x:Name="Target_Password" Width="100" />
+                    <Button x:Name="TestTargetConnection" Content="Test connection" />
+                    <Label x:Name="Target_Status" />
+                </StackPanel>
+            </GroupBox>
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="GetMaps" Content="Get maps" />
+                <Button x:Name="Transfer" Content="Transfer selected maps" Margin="10,0" />
+            </StackPanel>
+        </StackPanel>
+        <DataGrid x:Name="Source_Maps" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Category" Binding="{Binding Path=Category.Name}" IsReadOnly = "True" />
+                <DataGridTextColumn Header="Date" Binding="{Binding Path=MapInfo.Date}" IsReadOnly = "True"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Path=MapInfo.Name}" IsReadOnly = "True"/>
+                <DataGridCheckBoxColumn Header="Exists on Target" Binding="{Binding Path=ExistsOnTarget}" IsReadOnly = "True"/>
+                <DataGridTextColumn Header="Transfer Status" Binding="{Binding Path=TransferStatus}" IsReadOnly = "True" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</UserControl>
