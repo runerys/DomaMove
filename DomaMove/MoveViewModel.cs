@@ -46,7 +46,7 @@ namespace DomaMove
                     Task.WaitAll(Task.Factory.StartNew(() => Source.GetAllMaps()),
                                  Task.Factory.StartNew(() => Target.GetAllMaps()));
 
-                    Target.TagAllExistingMaps(Source);
+                    Target.TagAllExistingMapsAndSetCategories(Source);
                 })
                 .ContinueWith(t => Execute.OnUIThread(waitCursor.Dispose));
         }
@@ -224,15 +224,37 @@ namespace DomaMove
 
     public class DomaConnection : PropertyChangedBase
     {
+        private string _status;
+        private List<SourceMap> _maps;
         public string Url { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
 
-        public string Status { get; private set; }
+        public string Status
+        {
+            get { return _status; }
+            private set
+            {
+                if (value == _status) return;
+                _status = value;
+                NotifyOfPropertyChange("Status");
+            }
+        }
 
-        public List<SourceMap> Maps { get; private set; }
+        public List<SourceMap> Maps
+        {
+            get { return _maps; }
+            private set
+            {
+                if (Equals(value, _maps)) return;
+                _maps = value;
+                NotifyOfPropertyChange("Maps");
+            }
+        }
 
         private List<Category> Categories { get; set; }
+
+        private int UserId { get; set; }
 
         public DomaConnection()
         {
@@ -242,57 +264,61 @@ namespace DomaMove
 
         public void GetAllMaps()
         {
-            if (string.IsNullOrEmpty(Status))
-                TestConnection();
-
-            if (Status != "OK")
-            {
+            if (!CheckConnection)
                 return;
-            }
 
             var doma = GetDomaClient();
 
-            try
+            var getCategoriesTask = Task<GetAllCategoriesResponse>.Factory.FromAsync(doma.BeginGetAllCategories, doma.EndGetAllCategories, new GetAllCategoriesRequest { Username = Username, Password = Password }, null);
+
+            var getMapsTask = Task<GetAllMapsResponse>.Factory.FromAsync(doma.BeginGetAllMaps, doma.EndGetAllMaps, new GetAllMapsRequest { Username = Username, Password = Password }, null);
+
+            Task.WaitAll(getCategoriesTask, getMapsTask);
+
+            Categories = getCategoriesTask.Result.Categories.ToList();
+
+            Maps = (from map in getMapsTask.Result.Maps
+                    join category in Categories on map.CategoryID equals category.ID
+                    select new SourceMap(category, map, Url)).ToList();
+
+            UserId = Categories.First().UserID;
+        }
+
+        private bool CheckConnection
+        {
+            get
             {
-                var categoriesResponse = doma.GetAllCategories(new GetAllCategoriesRequest { Username = Username, Password = Password });
-                Categories = categoriesResponse.Categories.ToList();
-
-                var allMapsResponse = doma.GetAllMaps(new GetAllMapsRequest { Username = Username, Password = Password });
-
-                Maps = (from map in allMapsResponse.Maps
-                        join category in categoriesResponse.Categories on map.CategoryID equals category.ID
-                        select new SourceMap(category, map, Url)).ToList();
-
-                doma.Close();
+                if (string.IsNullOrEmpty(Status))
+                    TestConnection(); 
+                
+                return Status == "OK";
             }
-            catch (Exception e)
-            {
-                doma.Abort();
-            }
-            NotifyOfPropertyChange(() => Maps);
         }
 
         public void TestConnection()
         {
             var doma = GetDomaClient();
 
-            try
-            {
-                var response = doma.Connect(new ConnectRequest { Username = Username, Password = Password });
-                doma.Close();
+            var connectTask = Task<ConnectResponse>.Factory.FromAsync(doma.BeginConnect, doma.EndConnect, new ConnectRequest { Username = Username, Password = Password }, null);
 
-                if (response.Success)
-                    Status = "OK";
-                else
-                    Status = response.ErrorMessage;
-            }
-            catch (Exception e)
-            {
-                Status = "FAILED";
-                doma.Abort();
-            }
+            connectTask.ContinueWith(t =>
+                {
+                    if (t.Status == TaskStatus.Faulted)
+                    {
+                        Status = "FAILED";
+                        doma.Abort();
+                        return;
+                    }
 
-            NotifyOfPropertyChange(() => Status);
+                    var response = t.Result;
+
+                    doma.Close();
+
+                    if (response.Success)
+                        Status = "OK";
+                    else
+                        Status = response.ErrorMessage;
+                });
         }
 
         private DOMAServicePortTypeClient GetDomaClient()
@@ -322,15 +348,13 @@ namespace DomaMove
 
         public void UploadMaps(List<SourceMap> selectedMaps)
         {
-            if (string.IsNullOrEmpty(Status))
-                TestConnection();
-
-            if (Status != "OK")
-            {
+            if (!CheckConnection)
                 return;
-            }
 
-            Parallel.ForEach(selectedMaps, UploadMap); 
+            foreach (var selectedMap in selectedMaps)
+            {
+                UploadMap(selectedMap);
+            }
         }
 
         private void UploadMap(SourceMap sourceMap)
@@ -342,14 +366,30 @@ namespace DomaMove
 
             sourceMap.DownloadAllImages();
 
-            var mapInfo = sourceMap.MapInfo;
-            mapInfo.CategoryID = Categories.Single(x => x.Name == sourceMap.Category.Name).ID;
+            var sourceMapInfo = sourceMap.MapInfo;
+
+            var mapInfo = new MapInfo
+                {
+                    ID = 0, // Blank value to get new Id on target server
+                    UserID = UserId,
+                    CategoryID = Categories.Single(x => string.Compare(x.Name, sourceMap.Category.Name, StringComparison.OrdinalIgnoreCase) == 0).ID,
+                    Date = sourceMapInfo.Date,
+                    Name = sourceMapInfo.Name,
+                    Organiser = sourceMapInfo.Organiser,
+                    Country = sourceMapInfo.Country,
+                    Discipline = sourceMapInfo.Discipline,
+                    RelayLeg = sourceMapInfo.RelayLeg,
+                    MapName = sourceMapInfo.MapName,
+                    ResultListUrl = sourceMapInfo.ResultListUrl,
+                    Comment = sourceMap.MapInfo.Comment,
+                };
 
             var doma = GetDomaClient();
 
             try
             {
                 sourceMap.TransferStatus = "Uploading...";
+                
                 var mapImageResponse = doma.UploadPartialFile(new UploadPartialFileRequest
                     {
                         Data = sourceMap.MapImage,
@@ -376,8 +416,6 @@ namespace DomaMove
 
                 if (!mapImageResponse.Success || !blankImageResponse.Success || !thumbnailImageResponse.Success)
                     return;
-
-                mapInfo.ID = 0;
 
                 sourceMap.TransferStatus = "Publishing...";
                 var response = doma.PublishPreUploadedMap(new PublishPreUploadedMapRequest
@@ -409,7 +447,7 @@ namespace DomaMove
             }
         }
 
-        public void TagAllExistingMaps(DomaConnection source)
+        public void TagAllExistingMapsAndSetCategories(DomaConnection source)
         {
             var sourceMaps = source.Maps;
 

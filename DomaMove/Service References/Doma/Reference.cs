@@ -21,11 +21,23 @@ namespace DomaMove.Doma {
         [return: System.ServiceModel.MessageParameterAttribute(Name="response")]
         DomaMove.Doma.PublishMapResponse PublishMap(DomaMove.Doma.PublishMapRequest request);
         
+        [System.ServiceModel.OperationContractAttribute(AsyncPattern=true, Action="http://www.doma.nydalen.idrett.no/webservice.php/PublishMap", ReplyAction="*")]
+        System.IAsyncResult BeginPublishMap(DomaMove.Doma.PublishMapRequest request, System.AsyncCallback callback, object asyncState);
+        
+        [return: System.ServiceModel.MessageParameterAttribute(Name="response")]
+        DomaMove.Doma.PublishMapResponse EndPublishMap(System.IAsyncResult result);
+        
         [System.ServiceModel.OperationContractAttribute(Action="http://www.doma.nydalen.idrett.no/webservice.php/PublishPreUploadedMap", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute(Style=System.ServiceModel.OperationFormatStyle.Rpc, SupportFaults=true, Use=System.ServiceModel.OperationFormatUse.Encoded)]
         [System.ServiceModel.ServiceKnownTypeAttribute(typeof(Category))]
         [return: System.ServiceModel.MessageParameterAttribute(Name="response")]
         DomaMove.Doma.PublishPreUploadedMapResponse PublishPreUploadedMap(DomaMove.Doma.PublishPreUploadedMapRequest request);
+        
+        [System.ServiceModel.OperationContractAttribute(AsyncPattern=true, Action="http://www.doma.nydalen.idrett.no/webservice.php/PublishPreUploadedMap", ReplyAction="*")]
+        System.IAsyncResult BeginPublishPreUploadedMap(DomaMove.Doma.PublishPreUploadedMapRequest request, System.AsyncCallback callback, object asyncState);
+        
+        [return: System.ServiceModel.MessageParameterAttribute(Name="response")]
+        DomaMove.Doma.PublishPreUploadedMapResponse EndPublishPreUploadedMap(System.IAsyncResult result);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://www.doma.nydalen.idrett.no/webservice.php/UploadPartialFile", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute(Style=System.ServiceModel.OperationFormatStyle.Rpc, SupportFaults=true, Use=System.ServiceModel.OperationFormatUse.Encoded)]
@@ -33,11 +45,23 @@ namespace DomaMove.Doma {
         [return: System.ServiceModel.MessageParameterAttribute(Name="response")]
         DomaMove.Doma.UploadPartialFileResponse UploadPartialFile(DomaMove.Doma.UploadPartialFileRequest request);
         
+        [System.ServiceModel.OperationContractAttribute(AsyncPattern=true, Action="http://www.doma.nydalen.idrett.no/webservice.php/UploadPartialFile", ReplyAction="*")]
+        System.IAsyncResult BeginUploadPartialFile(DomaMove.Doma.UploadPartialFileRequest request, System.AsyncCallback callback, object asyncState);
+        
+        [return: System.ServiceModel.MessageParameterAttribute(Name="response")]
+        DomaMove.Doma.UploadPartialFileResponse EndUploadPartialFile(System.IAsyncResult result);
+        
         [System.ServiceModel.OperationContractAttribute(Action="http://www.doma.nydalen.idrett.no/webservice.php/GetAllMaps", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute(Style=System.ServiceModel.OperationFormatStyle.Rpc, SupportFaults=true, Use=System.ServiceModel.OperationFormatUse.Encoded)]
         [System.ServiceModel.ServiceKnownTypeAttribute(typeof(Category))]
         [return: System.ServiceModel.MessageParameterAttribute(Name="response")]
         DomaMove.Doma.GetAllMapsResponse GetAllMaps(DomaMove.Doma.GetAllMapsRequest request);
+        
+        [System.ServiceModel.OperationContractAttribute(AsyncPattern=true, Action="http://www.doma.nydalen.idrett.no/webservice.php/GetAllMaps", ReplyAction="*")]
+        System.IAsyncResult BeginGetAllMaps(DomaMove.Doma.GetAllMapsRequest request, System.AsyncCallback callback, object asyncState);
+        
+        [return: System.ServiceModel.MessageParameterAttribute(Name="response")]
+        DomaMove.Doma.GetAllMapsResponse EndGetAllMaps(System.IAsyncResult result);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://www.doma.nydalen.idrett.no/webservice.php/GetAllCategories", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute(Style=System.ServiceModel.OperationFormatStyle.Rpc, SupportFaults=true, Use=System.ServiceModel.OperationFormatUse.Encoded)]
@@ -45,11 +69,23 @@ namespace DomaMove.Doma {
         [return: System.ServiceModel.MessageParameterAttribute(Name="response")]
         DomaMove.Doma.GetAllCategoriesResponse GetAllCategories(DomaMove.Doma.GetAllCategoriesRequest request);
         
+        [System.ServiceModel.OperationContractAttribute(AsyncPattern=true, Action="http://www.doma.nydalen.idrett.no/webservice.php/GetAllCategories", ReplyAction="*")]
+        System.IAsyncResult BeginGetAllCategories(DomaMove.Doma.GetAllCategoriesRequest request, System.AsyncCallback callback, object asyncState);
+        
+        [return: System.ServiceModel.MessageParameterAttribute(Name="response")]
+        DomaMove.Doma.GetAllCategoriesResponse EndGetAllCategories(System.IAsyncResult result);
+        
         [System.ServiceModel.OperationContractAttribute(Action="http://www.doma.nydalen.idrett.no/webservice.php/Connect", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute(Style=System.ServiceModel.OperationFormatStyle.Rpc, SupportFaults=true, Use=System.ServiceModel.OperationFormatUse.Encoded)]
         [System.ServiceModel.ServiceKnownTypeAttribute(typeof(Category))]
         [return: System.ServiceModel.MessageParameterAttribute(Name="response")]
         DomaMove.Doma.ConnectResponse Connect(DomaMove.Doma.ConnectRequest request);
+        
+        [System.ServiceModel.OperationContractAttribute(AsyncPattern=true, Action="http://www.doma.nydalen.idrett.no/webservice.php/Connect", ReplyAction="*")]
+        System.IAsyncResult BeginConnect(DomaMove.Doma.ConnectRequest request, System.AsyncCallback callback, object asyncState);
+        
+        [return: System.ServiceModel.MessageParameterAttribute(Name="response")]
+        DomaMove.Doma.ConnectResponse EndConnect(System.IAsyncResult result);
     }
     
     /// <remarks/>
@@ -1028,7 +1064,157 @@ namespace DomaMove.Doma {
     
     [System.Diagnostics.DebuggerStepThroughAttribute()]
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
+    public partial class PublishMapCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
+        
+        private object[] results;
+        
+        public PublishMapCompletedEventArgs(object[] results, System.Exception exception, bool cancelled, object userState) : 
+                base(exception, cancelled, userState) {
+            this.results = results;
+        }
+        
+        public DomaMove.Doma.PublishMapResponse Result {
+            get {
+                base.RaiseExceptionIfNecessary();
+                return ((DomaMove.Doma.PublishMapResponse)(this.results[0]));
+            }
+        }
+    }
+    
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
+    public partial class PublishPreUploadedMapCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
+        
+        private object[] results;
+        
+        public PublishPreUploadedMapCompletedEventArgs(object[] results, System.Exception exception, bool cancelled, object userState) : 
+                base(exception, cancelled, userState) {
+            this.results = results;
+        }
+        
+        public DomaMove.Doma.PublishPreUploadedMapResponse Result {
+            get {
+                base.RaiseExceptionIfNecessary();
+                return ((DomaMove.Doma.PublishPreUploadedMapResponse)(this.results[0]));
+            }
+        }
+    }
+    
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
+    public partial class UploadPartialFileCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
+        
+        private object[] results;
+        
+        public UploadPartialFileCompletedEventArgs(object[] results, System.Exception exception, bool cancelled, object userState) : 
+                base(exception, cancelled, userState) {
+            this.results = results;
+        }
+        
+        public DomaMove.Doma.UploadPartialFileResponse Result {
+            get {
+                base.RaiseExceptionIfNecessary();
+                return ((DomaMove.Doma.UploadPartialFileResponse)(this.results[0]));
+            }
+        }
+    }
+    
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
+    public partial class GetAllMapsCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
+        
+        private object[] results;
+        
+        public GetAllMapsCompletedEventArgs(object[] results, System.Exception exception, bool cancelled, object userState) : 
+                base(exception, cancelled, userState) {
+            this.results = results;
+        }
+        
+        public DomaMove.Doma.GetAllMapsResponse Result {
+            get {
+                base.RaiseExceptionIfNecessary();
+                return ((DomaMove.Doma.GetAllMapsResponse)(this.results[0]));
+            }
+        }
+    }
+    
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
+    public partial class GetAllCategoriesCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
+        
+        private object[] results;
+        
+        public GetAllCategoriesCompletedEventArgs(object[] results, System.Exception exception, bool cancelled, object userState) : 
+                base(exception, cancelled, userState) {
+            this.results = results;
+        }
+        
+        public DomaMove.Doma.GetAllCategoriesResponse Result {
+            get {
+                base.RaiseExceptionIfNecessary();
+                return ((DomaMove.Doma.GetAllCategoriesResponse)(this.results[0]));
+            }
+        }
+    }
+    
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
+    public partial class ConnectCompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs {
+        
+        private object[] results;
+        
+        public ConnectCompletedEventArgs(object[] results, System.Exception exception, bool cancelled, object userState) : 
+                base(exception, cancelled, userState) {
+            this.results = results;
+        }
+        
+        public DomaMove.Doma.ConnectResponse Result {
+            get {
+                base.RaiseExceptionIfNecessary();
+                return ((DomaMove.Doma.ConnectResponse)(this.results[0]));
+            }
+        }
+    }
+    
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
     public partial class DOMAServicePortTypeClient : System.ServiceModel.ClientBase<DomaMove.Doma.DOMAServicePortType>, DomaMove.Doma.DOMAServicePortType {
+        
+        private BeginOperationDelegate onBeginPublishMapDelegate;
+        
+        private EndOperationDelegate onEndPublishMapDelegate;
+        
+        private System.Threading.SendOrPostCallback onPublishMapCompletedDelegate;
+        
+        private BeginOperationDelegate onBeginPublishPreUploadedMapDelegate;
+        
+        private EndOperationDelegate onEndPublishPreUploadedMapDelegate;
+        
+        private System.Threading.SendOrPostCallback onPublishPreUploadedMapCompletedDelegate;
+        
+        private BeginOperationDelegate onBeginUploadPartialFileDelegate;
+        
+        private EndOperationDelegate onEndUploadPartialFileDelegate;
+        
+        private System.Threading.SendOrPostCallback onUploadPartialFileCompletedDelegate;
+        
+        private BeginOperationDelegate onBeginGetAllMapsDelegate;
+        
+        private EndOperationDelegate onEndGetAllMapsDelegate;
+        
+        private System.Threading.SendOrPostCallback onGetAllMapsCompletedDelegate;
+        
+        private BeginOperationDelegate onBeginGetAllCategoriesDelegate;
+        
+        private EndOperationDelegate onEndGetAllCategoriesDelegate;
+        
+        private System.Threading.SendOrPostCallback onGetAllCategoriesCompletedDelegate;
+        
+        private BeginOperationDelegate onBeginConnectDelegate;
+        
+        private EndOperationDelegate onEndConnectDelegate;
+        
+        private System.Threading.SendOrPostCallback onConnectCompletedDelegate;
         
         public DOMAServicePortTypeClient() {
         }
@@ -1049,28 +1235,316 @@ namespace DomaMove.Doma {
                 base(binding, remoteAddress) {
         }
         
+        public event System.EventHandler<PublishMapCompletedEventArgs> PublishMapCompleted;
+        
+        public event System.EventHandler<PublishPreUploadedMapCompletedEventArgs> PublishPreUploadedMapCompleted;
+        
+        public event System.EventHandler<UploadPartialFileCompletedEventArgs> UploadPartialFileCompleted;
+        
+        public event System.EventHandler<GetAllMapsCompletedEventArgs> GetAllMapsCompleted;
+        
+        public event System.EventHandler<GetAllCategoriesCompletedEventArgs> GetAllCategoriesCompleted;
+        
+        public event System.EventHandler<ConnectCompletedEventArgs> ConnectCompleted;
+        
         public DomaMove.Doma.PublishMapResponse PublishMap(DomaMove.Doma.PublishMapRequest request) {
             return base.Channel.PublishMap(request);
+        }
+        
+        [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
+        public System.IAsyncResult BeginPublishMap(DomaMove.Doma.PublishMapRequest request, System.AsyncCallback callback, object asyncState) {
+            return base.Channel.BeginPublishMap(request, callback, asyncState);
+        }
+        
+        [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
+        public DomaMove.Doma.PublishMapResponse EndPublishMap(System.IAsyncResult result) {
+            return base.Channel.EndPublishMap(result);
+        }
+        
+        private System.IAsyncResult OnBeginPublishMap(object[] inValues, System.AsyncCallback callback, object asyncState) {
+            DomaMove.Doma.PublishMapRequest request = ((DomaMove.Doma.PublishMapRequest)(inValues[0]));
+            return this.BeginPublishMap(request, callback, asyncState);
+        }
+        
+        private object[] OnEndPublishMap(System.IAsyncResult result) {
+            DomaMove.Doma.PublishMapResponse retVal = this.EndPublishMap(result);
+            return new object[] {
+                    retVal};
+        }
+        
+        private void OnPublishMapCompleted(object state) {
+            if ((this.PublishMapCompleted != null)) {
+                InvokeAsyncCompletedEventArgs e = ((InvokeAsyncCompletedEventArgs)(state));
+                this.PublishMapCompleted(this, new PublishMapCompletedEventArgs(e.Results, e.Error, e.Cancelled, e.UserState));
+            }
+        }
+        
+        public void PublishMapAsync(DomaMove.Doma.PublishMapRequest request) {
+            this.PublishMapAsync(request, null);
+        }
+        
+        public void PublishMapAsync(DomaMove.Doma.PublishMapRequest request, object userState) {
+            if ((this.onBeginPublishMapDelegate == null)) {
+                this.onBeginPublishMapDelegate = new BeginOperationDelegate(this.OnBeginPublishMap);
+            }
+            if ((this.onEndPublishMapDelegate == null)) {
+                this.onEndPublishMapDelegate = new EndOperationDelegate(this.OnEndPublishMap);
+            }
+            if ((this.onPublishMapCompletedDelegate == null)) {
+                this.onPublishMapCompletedDelegate = new System.Threading.SendOrPostCallback(this.OnPublishMapCompleted);
+            }
+            base.InvokeAsync(this.onBeginPublishMapDelegate, new object[] {
+                        request}, this.onEndPublishMapDelegate, this.onPublishMapCompletedDelegate, userState);
         }
         
         public DomaMove.Doma.PublishPreUploadedMapResponse PublishPreUploadedMap(DomaMove.Doma.PublishPreUploadedMapRequest request) {
             return base.Channel.PublishPreUploadedMap(request);
         }
         
+        [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
+        public System.IAsyncResult BeginPublishPreUploadedMap(DomaMove.Doma.PublishPreUploadedMapRequest request, System.AsyncCallback callback, object asyncState) {
+            return base.Channel.BeginPublishPreUploadedMap(request, callback, asyncState);
+        }
+        
+        [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
+        public DomaMove.Doma.PublishPreUploadedMapResponse EndPublishPreUploadedMap(System.IAsyncResult result) {
+            return base.Channel.EndPublishPreUploadedMap(result);
+        }
+        
+        private System.IAsyncResult OnBeginPublishPreUploadedMap(object[] inValues, System.AsyncCallback callback, object asyncState) {
+            DomaMove.Doma.PublishPreUploadedMapRequest request = ((DomaMove.Doma.PublishPreUploadedMapRequest)(inValues[0]));
+            return this.BeginPublishPreUploadedMap(request, callback, asyncState);
+        }
+        
+        private object[] OnEndPublishPreUploadedMap(System.IAsyncResult result) {
+            DomaMove.Doma.PublishPreUploadedMapResponse retVal = this.EndPublishPreUploadedMap(result);
+            return new object[] {
+                    retVal};
+        }
+        
+        private void OnPublishPreUploadedMapCompleted(object state) {
+            if ((this.PublishPreUploadedMapCompleted != null)) {
+                InvokeAsyncCompletedEventArgs e = ((InvokeAsyncCompletedEventArgs)(state));
+                this.PublishPreUploadedMapCompleted(this, new PublishPreUploadedMapCompletedEventArgs(e.Results, e.Error, e.Cancelled, e.UserState));
+            }
+        }
+        
+        public void PublishPreUploadedMapAsync(DomaMove.Doma.PublishPreUploadedMapRequest request) {
+            this.PublishPreUploadedMapAsync(request, null);
+        }
+        
+        public void PublishPreUploadedMapAsync(DomaMove.Doma.PublishPreUploadedMapRequest request, object userState) {
+            if ((this.onBeginPublishPreUploadedMapDelegate == null)) {
+                this.onBeginPublishPreUploadedMapDelegate = new BeginOperationDelegate(this.OnBeginPublishPreUploadedMap);
+            }
+            if ((this.onEndPublishPreUploadedMapDelegate == null)) {
+                this.onEndPublishPreUploadedMapDelegate = new EndOperationDelegate(this.OnEndPublishPreUploadedMap);
+            }
+            if ((this.onPublishPreUploadedMapCompletedDelegate == null)) {
+                this.onPublishPreUploadedMapCompletedDelegate = new System.Threading.SendOrPostCallback(this.OnPublishPreUploadedMapCompleted);
+            }
+            base.InvokeAsync(this.onBeginPublishPreUploadedMapDelegate, new object[] {
+                        request}, this.onEndPublishPreUploadedMapDelegate, this.onPublishPreUploadedMapCompletedDelegate, userState);
+        }
+        
         public DomaMove.Doma.UploadPartialFileResponse UploadPartialFile(DomaMove.Doma.UploadPartialFileRequest request) {
             return base.Channel.UploadPartialFile(request);
+        }
+        
+        [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
+        public System.IAsyncResult BeginUploadPartialFile(DomaMove.Doma.UploadPartialFileRequest request, System.AsyncCallback callback, object asyncState) {
+            return base.Channel.BeginUploadPartialFile(request, callback, asyncState);
+        }
+        
+        [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
+        public DomaMove.Doma.UploadPartialFileResponse EndUploadPartialFile(System.IAsyncResult result) {
+            return base.Channel.EndUploadPartialFile(result);
+        }
+        
+        private System.IAsyncResult OnBeginUploadPartialFile(object[] inValues, System.AsyncCallback callback, object asyncState) {
+            DomaMove.Doma.UploadPartialFileRequest request = ((DomaMove.Doma.UploadPartialFileRequest)(inValues[0]));
+            return this.BeginUploadPartialFile(request, callback, asyncState);
+        }
+        
+        private object[] OnEndUploadPartialFile(System.IAsyncResult result) {
+            DomaMove.Doma.UploadPartialFileResponse retVal = this.EndUploadPartialFile(result);
+            return new object[] {
+                    retVal};
+        }
+        
+        private void OnUploadPartialFileCompleted(object state) {
+            if ((this.UploadPartialFileCompleted != null)) {
+                InvokeAsyncCompletedEventArgs e = ((InvokeAsyncCompletedEventArgs)(state));
+                this.UploadPartialFileCompleted(this, new UploadPartialFileCompletedEventArgs(e.Results, e.Error, e.Cancelled, e.UserState));
+            }
+        }
+        
+        public void UploadPartialFileAsync(DomaMove.Doma.UploadPartialFileRequest request) {
+            this.UploadPartialFileAsync(request, null);
+        }
+        
+        public void UploadPartialFileAsync(DomaMove.Doma.UploadPartialFileRequest request, object userState) {
+            if ((this.onBeginUploadPartialFileDelegate == null)) {
+                this.onBeginUploadPartialFileDelegate = new BeginOperationDelegate(this.OnBeginUploadPartialFile);
+            }
+            if ((this.onEndUploadPartialFileDelegate == null)) {
+                this.onEndUploadPartialFileDelegate = new EndOperationDelegate(this.OnEndUploadPartialFile);
+            }
+            if ((this.onUploadPartialFileCompletedDelegate == null)) {
+                this.onUploadPartialFileCompletedDelegate = new System.Threading.SendOrPostCallback(this.OnUploadPartialFileCompleted);
+            }
+            base.InvokeAsync(this.onBeginUploadPartialFileDelegate, new object[] {
+                        request}, this.onEndUploadPartialFileDelegate, this.onUploadPartialFileCompletedDelegate, userState);
         }
         
         public DomaMove.Doma.GetAllMapsResponse GetAllMaps(DomaMove.Doma.GetAllMapsRequest request) {
             return base.Channel.GetAllMaps(request);
         }
         
+        [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
+        public System.IAsyncResult BeginGetAllMaps(DomaMove.Doma.GetAllMapsRequest request, System.AsyncCallback callback, object asyncState) {
+            return base.Channel.BeginGetAllMaps(request, callback, asyncState);
+        }
+        
+        [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
+        public DomaMove.Doma.GetAllMapsResponse EndGetAllMaps(System.IAsyncResult result) {
+            return base.Channel.EndGetAllMaps(result);
+        }
+        
+        private System.IAsyncResult OnBeginGetAllMaps(object[] inValues, System.AsyncCallback callback, object asyncState) {
+            DomaMove.Doma.GetAllMapsRequest request = ((DomaMove.Doma.GetAllMapsRequest)(inValues[0]));
+            return this.BeginGetAllMaps(request, callback, asyncState);
+        }
+        
+        private object[] OnEndGetAllMaps(System.IAsyncResult result) {
+            DomaMove.Doma.GetAllMapsResponse retVal = this.EndGetAllMaps(result);
+            return new object[] {
+                    retVal};
+        }
+        
+        private void OnGetAllMapsCompleted(object state) {
+            if ((this.GetAllMapsCompleted != null)) {
+                InvokeAsyncCompletedEventArgs e = ((InvokeAsyncCompletedEventArgs)(state));
+                this.GetAllMapsCompleted(this, new GetAllMapsCompletedEventArgs(e.Results, e.Error, e.Cancelled, e.UserState));
+            }
+        }
+        
+        public void GetAllMapsAsync(DomaMove.Doma.GetAllMapsRequest request) {
+            this.GetAllMapsAsync(request, null);
+        }
+        
+        public void GetAllMapsAsync(DomaMove.Doma.GetAllMapsRequest request, object userState) {
+            if ((this.onBeginGetAllMapsDelegate == null)) {
+                this.onBeginGetAllMapsDelegate = new BeginOperationDelegate(this.OnBeginGetAllMaps);
+            }
+            if ((this.onEndGetAllMapsDelegate == null)) {
+                this.onEndGetAllMapsDelegate = new EndOperationDelegate(this.OnEndGetAllMaps);
+            }
+            if ((this.onGetAllMapsCompletedDelegate == null)) {
+                this.onGetAllMapsCompletedDelegate = new System.Threading.SendOrPostCallback(this.OnGetAllMapsCompleted);
+            }
+            base.InvokeAsync(this.onBeginGetAllMapsDelegate, new object[] {
+                        request}, this.onEndGetAllMapsDelegate, this.onGetAllMapsCompletedDelegate, userState);
+        }
+        
         public DomaMove.Doma.GetAllCategoriesResponse GetAllCategories(DomaMove.Doma.GetAllCategoriesRequest request) {
             return base.Channel.GetAllCategories(request);
         }
         
+        [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
+        public System.IAsyncResult BeginGetAllCategories(DomaMove.Doma.GetAllCategoriesRequest request, System.AsyncCallback callback, object asyncState) {
+            return base.Channel.BeginGetAllCategories(request, callback, asyncState);
+        }
+        
+        [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
+        public DomaMove.Doma.GetAllCategoriesResponse EndGetAllCategories(System.IAsyncResult result) {
+            return base.Channel.EndGetAllCategories(result);
+        }
+        
+        private System.IAsyncResult OnBeginGetAllCategories(object[] inValues, System.AsyncCallback callback, object asyncState) {
+            DomaMove.Doma.GetAllCategoriesRequest request = ((DomaMove.Doma.GetAllCategoriesRequest)(inValues[0]));
+            return this.BeginGetAllCategories(request, callback, asyncState);
+        }
+        
+        private object[] OnEndGetAllCategories(System.IAsyncResult result) {
+            DomaMove.Doma.GetAllCategoriesResponse retVal = this.EndGetAllCategories(result);
+            return new object[] {
+                    retVal};
+        }
+        
+        private void OnGetAllCategoriesCompleted(object state) {
+            if ((this.GetAllCategoriesCompleted != null)) {
+                InvokeAsyncCompletedEventArgs e = ((InvokeAsyncCompletedEventArgs)(state));
+                this.GetAllCategoriesCompleted(this, new GetAllCategoriesCompletedEventArgs(e.Results, e.Error, e.Cancelled, e.UserState));
+            }
+        }
+        
+        public void GetAllCategoriesAsync(DomaMove.Doma.GetAllCategoriesRequest request) {
+            this.GetAllCategoriesAsync(request, null);
+        }
+        
+        public void GetAllCategoriesAsync(DomaMove.Doma.GetAllCategoriesRequest request, object userState) {
+            if ((this.onBeginGetAllCategoriesDelegate == null)) {
+                this.onBeginGetAllCategoriesDelegate = new BeginOperationDelegate(this.OnBeginGetAllCategories);
+            }
+            if ((this.onEndGetAllCategoriesDelegate == null)) {
+                this.onEndGetAllCategoriesDelegate = new EndOperationDelegate(this.OnEndGetAllCategories);
+            }
+            if ((this.onGetAllCategoriesCompletedDelegate == null)) {
+                this.onGetAllCategoriesCompletedDelegate = new System.Threading.SendOrPostCallback(this.OnGetAllCategoriesCompleted);
+            }
+            base.InvokeAsync(this.onBeginGetAllCategoriesDelegate, new object[] {
+                        request}, this.onEndGetAllCategoriesDelegate, this.onGetAllCategoriesCompletedDelegate, userState);
+        }
+        
         public DomaMove.Doma.ConnectResponse Connect(DomaMove.Doma.ConnectRequest request) {
             return base.Channel.Connect(request);
+        }
+        
+        [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
+        public System.IAsyncResult BeginConnect(DomaMove.Doma.ConnectRequest request, System.AsyncCallback callback, object asyncState) {
+            return base.Channel.BeginConnect(request, callback, asyncState);
+        }
+        
+        [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
+        public DomaMove.Doma.ConnectResponse EndConnect(System.IAsyncResult result) {
+            return base.Channel.EndConnect(result);
+        }
+        
+        private System.IAsyncResult OnBeginConnect(object[] inValues, System.AsyncCallback callback, object asyncState) {
+            DomaMove.Doma.ConnectRequest request = ((DomaMove.Doma.ConnectRequest)(inValues[0]));
+            return this.BeginConnect(request, callback, asyncState);
+        }
+        
+        private object[] OnEndConnect(System.IAsyncResult result) {
+            DomaMove.Doma.ConnectResponse retVal = this.EndConnect(result);
+            return new object[] {
+                    retVal};
+        }
+        
+        private void OnConnectCompleted(object state) {
+            if ((this.ConnectCompleted != null)) {
+                InvokeAsyncCompletedEventArgs e = ((InvokeAsyncCompletedEventArgs)(state));
+                this.ConnectCompleted(this, new ConnectCompletedEventArgs(e.Results, e.Error, e.Cancelled, e.UserState));
+            }
+        }
+        
+        public void ConnectAsync(DomaMove.Doma.ConnectRequest request) {
+            this.ConnectAsync(request, null);
+        }
+        
+        public void ConnectAsync(DomaMove.Doma.ConnectRequest request, object userState) {
+            if ((this.onBeginConnectDelegate == null)) {
+                this.onBeginConnectDelegate = new BeginOperationDelegate(this.OnBeginConnect);
+            }
+            if ((this.onEndConnectDelegate == null)) {
+                this.onEndConnectDelegate = new EndOperationDelegate(this.OnEndConnect);
+            }
+            if ((this.onConnectCompletedDelegate == null)) {
+                this.onConnectCompletedDelegate = new System.Threading.SendOrPostCallback(this.OnConnectCompleted);
+            }
+            base.InvokeAsync(this.onBeginConnectDelegate, new object[] {
+                        request}, this.onEndConnectDelegate, this.onConnectCompletedDelegate, userState);
         }
     }
 }

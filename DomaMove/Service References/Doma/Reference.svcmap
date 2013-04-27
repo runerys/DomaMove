@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ReferenceGroup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="6801f72b-2572-4b65-a1ff-a5067f833244" xmlns="urn:schemas-microsoft-com:xml-wcfservicemap">
+<ReferenceGroup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="5afeede5-5d14-44af-8441-d007a776e55d" xmlns="urn:schemas-microsoft-com:xml-wcfservicemap">
   <ClientOptions>
-    <GenerateAsynchronousMethods>false</GenerateAsynchronousMethods>
+    <GenerateAsynchronousMethods>true</GenerateAsynchronousMethods>
     <EnableDataBinding>true</EnableDataBinding>
     <ExcludedTypes />
     <ImportXmlTypes>false</ImportXmlTypes>
@@ -23,7 +23,7 @@
     <MetadataSource Address="http://doma.nydalen.idrett.no/webservice.php?wsdl" Protocol="http" SourceId="1" />
   </MetadataSources>
   <Metadata>
-    <MetadataFile FileName="webservice.wsdl" MetadataType="Wsdl" ID="edf02fe2-e8cf-43d7-9fbd-431c929f6777" SourceId="1" SourceUrl="http://doma.nydalen.idrett.no/webservice.php?wsdl" />
+    <MetadataFile FileName="webservice.wsdl" MetadataType="Wsdl" ID="45132417-9e66-4d67-b62c-26718cb5b0d2" SourceId="1" SourceUrl="http://doma.nydalen.idrett.no/webservice.php?wsdl" />
   </Metadata>
   <Extensions>
     <ExtensionFile FileName="configuration91.svcinfo" Name="configuration91.svcinfo" />
