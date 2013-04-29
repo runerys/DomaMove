@@ -8,11 +8,9 @@ using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
 using System.Xml;
 using Caliburn.Micro;
 using DomaMove.Doma;
-using Mouse = System.Windows.Input.Mouse;
 
 namespace DomaMove
 {
@@ -44,9 +42,9 @@ namespace DomaMove
             Task.Factory.StartNew(() =>
                 {
                     Task.WaitAll(Task.Factory.StartNew(() => Source.GetAllMaps()),
-                                 Task.Factory.StartNew(() => Target.GetAllMaps()));
+                                Task.Factory.StartNew(() => Target.GetAllMaps()));
 
-                    Target.TagAllExistingMapsAndSetCategories(Source);
+                    Target.TagAllExistingMapsAndSetTargetCategories(Source);
                 })
                 .ContinueWith(t => Execute.OnUIThread(waitCursor.Dispose));
         }
@@ -76,38 +74,24 @@ namespace DomaMove
         }
     }
 
-    public class WaitCursor : IDisposable
-    {
-        public static WaitCursor Start()
-        {
-            return new WaitCursor();
-        }
-
-        private WaitCursor()
-        {
-            Mouse.OverrideCursor = Cursors.Wait;
-        }
-
-        public void Dispose()
-        {
-            Mouse.OverrideCursor = null;
-        }
-    }
-
     public class SourceMap : PropertyChangedBase
     {
-        private readonly string _sourceUrl;
+        public DomaConnection SourceConnection { get; set; }
         private bool? _existsOnTarget;
         private string _transferStatus;
+        private string _sourceUrl;
+        private Category _targetCategory;
+        private string Version { get; set; }
 
-        public SourceMap(Category category, MapInfo mapInfo, string sourceUrl)
+        public SourceMap(Category category, MapInfo mapInfo, DomaConnection sourceConnection)
         {
-            _sourceUrl = sourceUrl;
+            SourceConnection = sourceConnection;
 
-            _sourceUrl = _sourceUrl.ToLower().Replace("/webservice.php", string.Empty);
+            _sourceUrl = sourceConnection.Url.ToLower().Replace("/webservice.php", string.Empty);
 
             Category = category;
             MapInfo = mapInfo;
+
             ExistsOnTarget = false;
         }
 
@@ -132,15 +116,25 @@ namespace DomaMove
 
         private byte[] DownloadJpgWithFallbackToPng(string imageType = "")
         {
-            var image = DownloadImage(GetUrl(imageType, "jpg"));
+            var image = DownloadImageAsync(GetUrl(imageType, "jpg"));
 
-            if (image == null)
+            if (image != null)
             {
-                image = DownloadImage(GetUrl(imageType, "png"));
+                FileExtension = "jpg";
+                return image;
+            }
+
+            image = DownloadImage(GetUrl(imageType, "png"));
+
+            if (image != null)
+            {
+                FileExtension = "png";
             }
 
             return image;
         }
+
+        public string FileExtension { get; set; }
 
         public byte[] DownloadThumbnailImage()
         {
@@ -181,6 +175,66 @@ namespace DomaMove
                             bytesRead = inputStream.Read(buffer, 0, buffer.Length);
                             outputStream.Write(buffer, 0, bytesRead);
                         } while (bytesRead != 0);
+
+                        return outputStream.ToArray();
+                    }
+                }
+            }
+            catch (WebException e)
+            {
+                var response = e.Response as HttpWebResponse;
+
+                if (response != null)
+                {
+                    if (response.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        // Expected - will retry another filetype
+                        return null;
+                    }
+                }
+
+                throw;
+            }
+
+            return null;
+        }
+
+        private static byte[] DownloadImageAsync(string uri)
+        {           
+            try
+            {
+                var request = (HttpWebRequest)WebRequest.Create(uri);
+                //var response = (HttpWebResponse)request.GetResponse();
+
+                var getResponseTask = Task<WebResponse>.Factory.FromAsync(request.BeginGetResponse, request.EndGetResponse, null);
+
+                getResponseTask.Wait();
+
+                var response = (HttpWebResponse)getResponseTask.Result;
+
+                // Check that the remote file was found. The ContentType
+                // check is performed since a request for a non-existent
+                // image file might be redirected to a 404-page, which would
+                // yield the StatusCode "OK", even though the image was not
+                // found.
+                if ((response.StatusCode == HttpStatusCode.OK ||
+                     response.StatusCode == HttpStatusCode.Moved ||
+                     response.StatusCode == HttpStatusCode.Redirect) &&
+                    response.ContentType.StartsWith("image", StringComparison.OrdinalIgnoreCase))
+                {
+                    // if the remote file was found, download it
+                    using (var inputStream = response.GetResponseStream())
+                    using (var outputStream = new MemoryStream())
+                    {
+                        var buffer = new byte[4096];
+
+                        int bytesRead;
+                        do
+                        {
+                            bytesRead = inputStream.Read(buffer, 0, buffer.Length);
+                            outputStream.Write(buffer, 0, bytesRead);
+                        } while (bytesRead != 0);
+
                         return outputStream.ToArray();
                     }
                 }
@@ -214,16 +268,39 @@ namespace DomaMove
             set { _transferStatus = value; NotifyOfPropertyChange(() => TransferStatus); }
         }
 
-        public void DownloadAllImages()
+        public Category TargetCategory
         {
-            MapImage = DownloadImage();
-            BlankImage = DownloadBlankImage();
-            ThumbnailImage = DownloadThumbnailImage();
+            get { return _targetCategory; }
+            set
+            {
+                if (Equals(value, _targetCategory)) return;
+                _targetCategory = value;
+                NotifyOfPropertyChange("TargetCategory");
+            }
+        }
+
+        public void DownloadImages()
+        {
+            if (SourceConnection.SupportsPublishWithPreUpload)
+            {
+                MapImage = DownloadImage();
+                BlankImage = DownloadBlankImage();
+                ThumbnailImage = DownloadThumbnailImage();
+            }
+            else
+            {
+                MapImage = DownloadImage();
+            }
         }
     }
 
     public class DomaConnection : PropertyChangedBase
     {
+        public void OverrideVersion(string version)
+        {
+            Version = version;
+        }
+
         private string _status;
         private List<SourceMap> _maps;
         public string Url { get; set; }
@@ -264,10 +341,10 @@ namespace DomaMove
 
         public void GetAllMaps()
         {
-            if (!CheckConnection)
+            if (!ConnectionOk)
                 return;
 
-            var doma = GetDomaClient();
+            var doma = CreateDomaClient();
 
             var getCategoriesTask = Task<GetAllCategoriesResponse>.Factory.FromAsync(doma.BeginGetAllCategories, doma.EndGetAllCategories, new GetAllCategoriesRequest { Username = Username, Password = Password }, null);
 
@@ -279,29 +356,29 @@ namespace DomaMove
 
             Maps = (from map in getMapsTask.Result.Maps
                     join category in Categories on map.CategoryID equals category.ID
-                    select new SourceMap(category, map, Url)).ToList();
+                    select new SourceMap(category, map, this)).ToList();
 
             UserId = Categories.First().UserID;
         }
 
-        private bool CheckConnection
+        private bool ConnectionOk
         {
             get
             {
                 if (string.IsNullOrEmpty(Status))
-                    TestConnection(); 
-                
+                    TestConnection().Wait();
+
                 return Status == "OK";
             }
         }
 
-        public void TestConnection()
+        public Task TestConnection()
         {
-            var doma = GetDomaClient();
+            var doma = CreateDomaClient();
 
             var connectTask = Task<ConnectResponse>.Factory.FromAsync(doma.BeginConnect, doma.EndConnect, new ConnectRequest { Username = Username, Password = Password }, null);
 
-            connectTask.ContinueWith(t =>
+            var finalTask = connectTask.ContinueWith(t =>
                 {
                     if (t.Status == TaskStatus.Faulted)
                     {
@@ -315,13 +392,28 @@ namespace DomaMove
                     doma.Close();
 
                     if (response.Success)
+                    {
                         Status = "OK";
+                        Version = response.Version;
+                    }
                     else
                         Status = response.ErrorMessage;
                 });
+
+            return finalTask;
         }
 
-        private DOMAServicePortTypeClient GetDomaClient()
+        protected string Version
+        {
+            get { return _version; }
+            set
+            {
+                if (string.IsNullOrEmpty(_version))
+                    _version = value;
+            }
+        }
+
+        private DOMAServicePortTypeClient CreateDomaClient()
         {
             var binding = new BasicHttpBinding
             {
@@ -348,7 +440,7 @@ namespace DomaMove
 
         public void UploadMaps(List<SourceMap> selectedMaps)
         {
-            if (!CheckConnection)
+            if (!ConnectionOk)
                 return;
 
             foreach (var selectedMap in selectedMaps)
@@ -357,14 +449,27 @@ namespace DomaMove
             }
         }
 
+        private bool? _supportsPublishWithPreUpload;
+        private string _version;
+
+        public bool SupportsPublishWithPreUpload
+        {
+            get
+            {
+                if (_supportsPublishWithPreUpload == null)
+                {
+                    _supportsPublishWithPreUpload = Version != null &&
+                                                    String.Compare(Version, "3.0", StringComparison.Ordinal) >= 0;
+                }
+
+                return _supportsPublishWithPreUpload.Value;
+            }
+        }
+
         private void UploadMap(SourceMap sourceMap)
         {
             if (sourceMap.ExistsOnTarget == true)
                 return;
-
-            sourceMap.TransferStatus = "Downloading...";
-
-            sourceMap.DownloadAllImages();
 
             var sourceMapInfo = sourceMap.MapInfo;
 
@@ -372,7 +477,7 @@ namespace DomaMove
                 {
                     ID = 0, // Blank value to get new Id on target server
                     UserID = UserId,
-                    CategoryID = Categories.Single(x => string.Compare(x.Name, sourceMap.Category.Name, StringComparison.OrdinalIgnoreCase) == 0).ID,
+                    CategoryID = sourceMap.TargetCategory.ID,
                     Date = sourceMapInfo.Date,
                     Name = sourceMapInfo.Name,
                     Organiser = sourceMapInfo.Organiser,
@@ -381,52 +486,109 @@ namespace DomaMove
                     RelayLeg = sourceMapInfo.RelayLeg,
                     MapName = sourceMapInfo.MapName,
                     ResultListUrl = sourceMapInfo.ResultListUrl,
-                    Comment = sourceMap.MapInfo.Comment,
+                    Comment = sourceMap.MapInfo.Comment
                 };
 
-            var doma = GetDomaClient();
+            if (sourceMap.SourceConnection.SupportsPublishWithPreUpload && SupportsPublishWithPreUpload)
+            {
+                PublishWithPreUpload(sourceMap, mapInfo);
+            }
+            else
+            {
+                PublishMap(sourceMap, mapInfo);
+            }
+        }
+
+        private void PublishMap(SourceMap sourceMap, MapInfo mapInfo)
+        {
+            sourceMap.TransferStatus = "Downloading...";
+            sourceMap.DownloadImages();
+
+            var doma = CreateDomaClient();
+
+            mapInfo.MapImageFileExtension = sourceMap.FileExtension;
+            mapInfo.MapImageData = sourceMap.MapImage;
+
+            sourceMap.TransferStatus = "Publishing...";
+
+            var publishMapTask = Task<PublishMapResponse>.Factory.FromAsync(doma.BeginPublishMap, doma.EndPublishMap,
+                                                                            new PublishMapRequest { MapInfo = mapInfo, Username = Username, Password = Password }, null);
+
+            publishMapTask.Wait();
+
+            if (publishMapTask.Status == TaskStatus.Faulted)
+            {
+                if (publishMapTask.Exception != null)
+                    sourceMap.TransferStatus = publishMapTask.Exception.Message;
+                else
+                    sourceMap.TransferStatus = "Failed";
+
+                return;
+            }
+
+            var response = publishMapTask.Result;
+
+            if (response.Success)
+            {
+                sourceMap.TransferStatus = "Complete";
+                sourceMap.ExistsOnTarget = true;
+            }
+            else
+            {
+                sourceMap.TransferStatus = response.ErrorMessage;
+            }
+        }
+
+        private void PublishWithPreUpload(SourceMap sourceMap, MapInfo mapInfo)
+        {
+            sourceMap.TransferStatus = "Downloading...";
+            sourceMap.DownloadImages();
+
+            var doma = CreateDomaClient();
+
+            mapInfo.MapImageFileExtension = sourceMap.FileExtension;
 
             try
             {
                 sourceMap.TransferStatus = "Uploading...";
-                
+
                 var mapImageResponse = doma.UploadPartialFile(new UploadPartialFileRequest
                     {
                         Data = sourceMap.MapImage,
-                        FileName = Guid.NewGuid().ToString() + ".jpg",
+                        FileName = Guid.NewGuid().ToString() + "." + sourceMap.FileExtension,
                         Username = Username,
                         Password = Password
                     });
 
                 var blankImageResponse = doma.UploadPartialFile(new UploadPartialFileRequest
-                   {
-                       Data = sourceMap.BlankImage,
-                       FileName = Guid.NewGuid().ToString() + ".jpg",
-                       Username = Username,
-                       Password = Password
-                   });
+                    {
+                        Data = sourceMap.BlankImage,
+                        FileName = Guid.NewGuid().ToString() + "." + sourceMap.FileExtension,
+                        Username = Username,
+                        Password = Password
+                    });
 
                 var thumbnailImageResponse = doma.UploadPartialFile(new UploadPartialFileRequest
-                {
-                    Data = sourceMap.ThumbnailImage,
-                    FileName = Guid.NewGuid().ToString() + ".jpg",
-                    Username = Username,
-                    Password = Password
-                });
+                    {
+                        Data = sourceMap.ThumbnailImage,
+                        FileName = Guid.NewGuid().ToString() + "." + sourceMap.FileExtension,
+                        Username = Username,
+                        Password = Password
+                    });
 
                 if (!mapImageResponse.Success || !blankImageResponse.Success || !thumbnailImageResponse.Success)
                     return;
 
                 sourceMap.TransferStatus = "Publishing...";
                 var response = doma.PublishPreUploadedMap(new PublishPreUploadedMapRequest
-                {
-                    MapInfo = mapInfo,
-                    PreUploadedMapImageFileName = mapImageResponse.FileName,
-                    PreUploadedBlankMapImageFileName = blankImageResponse.FileName,
-                    PreUploadedThumbnailImageFileName = thumbnailImageResponse.FileName,
-                    Username = Username,
-                    Password = Password
-                });
+                    {
+                        MapInfo = mapInfo,
+                        PreUploadedMapImageFileName = mapImageResponse.FileName,
+                        PreUploadedBlankMapImageFileName = blankImageResponse.FileName,
+                        PreUploadedThumbnailImageFileName = thumbnailImageResponse.FileName,
+                        Username = Username,
+                        Password = Password
+                    });
 
                 if (response.Success)
                 {
@@ -437,21 +599,16 @@ namespace DomaMove
                 {
                     sourceMap.TransferStatus = response.ErrorMessage;
                 }
-
-                doma.Close();
             }
             catch (Exception e)
             {
                 sourceMap.TransferStatus = e.Message;
-                doma.Abort();
             }
         }
 
-        public void TagAllExistingMapsAndSetCategories(DomaConnection source)
+        public void TagAllExistingMapsAndSetTargetCategories(DomaConnection source)
         {
-            var sourceMaps = source.Maps;
-
-            foreach (var sourceMap in sourceMaps)
+            foreach (var sourceMap in source.Maps)
             {
                 sourceMap.ExistsOnTarget = (
                     Maps.Any(
@@ -459,6 +616,11 @@ namespace DomaMove
                         x.MapInfo.Date == sourceMap.MapInfo.Date &&
                         string.Compare(x.MapInfo.Name, sourceMap.MapInfo.Name,
                                        StringComparison.InvariantCultureIgnoreCase) == 0));
+
+                // Match Category by name. If missing - take first by ID
+                var foundCategory = Categories.FirstOrDefault(x => string.Compare(x.Name, sourceMap.Category.Name, StringComparison.OrdinalIgnoreCase) == 0);
+
+                sourceMap.TargetCategory = foundCategory ?? Categories.OrderBy(x => x.ID).First();
             }
         }
     }

@@ -33,8 +33,8 @@
                 </StackPanel>
             </GroupBox>
             <StackPanel Orientation="Horizontal">
-                <Button x:Name="GetMaps" Content="Get maps" />
-                <Button x:Name="Transfer" Content="Transfer selected maps" Margin="10,0" />
+                <Button x:Name="GetMaps" Content="Get map list" />
+                <Button x:Name="Transfer" Content="Copy selected maps to target" Margin="10,0" />
             </StackPanel>
         </StackPanel>
         <DataGrid x:Name="Source_Maps" AutoGenerateColumns="False">
@@ -42,7 +42,8 @@
                 <DataGridTextColumn Header="Category" Binding="{Binding Path=Category.Name}" IsReadOnly = "True" />
                 <DataGridTextColumn Header="Date" Binding="{Binding Path=MapInfo.Date}" IsReadOnly = "True"/>
                 <DataGridTextColumn Header="Name" Binding="{Binding Path=MapInfo.Name}" IsReadOnly = "True"/>
-                <DataGridCheckBoxColumn Header="Exists on Target" Binding="{Binding Path=ExistsOnTarget}" IsReadOnly = "True"/>
+                <DataGridCheckBoxColumn Header="Exists on Target" Binding="{Binding Path=ExistsOnTarget}" IsReadOnly = "True" />
+                <DataGridTextColumn Header="Target Category" Binding="{Binding Path=TargetCategory.Name}" IsReadOnly = "True" />
                 <DataGridTextColumn Header="Transfer Status" Binding="{Binding Path=TransferStatus}" IsReadOnly = "True" Width="*"/>
             </DataGrid.Columns>
         </DataGrid>

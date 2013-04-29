@@ -44,7 +44,7 @@ namespace DomaMove
                 }
             }
 
-            var source = new DomaConnection { Url = sourceUrl, Username = sourceUser, Password = sourcePassword };
+            var source = new DomaConnection { Url = sourceUrl, Username = sourceUser, Password = sourcePassword };           
             var target = new DomaConnection { Url = targetUrl, Username = targetUser, Password = targetPassword };
 
             var transferViewModel = new MoveViewModel(source, target);
