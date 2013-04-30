@@ -64,17 +64,19 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Bootstrapper.cs" />
-    <Compile Include="MoveView.xaml.cs">
-      <DependentUpon>MoveView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="MoveViewModel.cs" />
+    <Compile Include="Engine\ConnectionParameters.cs" />
+    <Compile Include="Engine\DomaClientFactory.cs" />
+    <Compile Include="Engine\DomaConnection.cs" />
+    <Compile Include="Engine\ImageDownloader.cs" />
+    <Compile Include="UI\MoveViewModel.cs" />
     <Compile Include="Service References\Doma\Reference.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Reference.svcmap</DependentUpon>
     </Compile>
-    <Compile Include="WaitCursor.cs" />
-    <Page Include="MoveView.xaml">
+    <Compile Include="Engine\SourceMap.cs" />
+    <Compile Include="UI\WaitCursor.cs" />
+    <Page Include="UI\MoveView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -122,9 +124,6 @@
       <DependentUpon>Reference.svcmap</DependentUpon>
     </None>
     <None Include="Service References\Doma\webservice.wsdl" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />

@@ -3,6 +3,8 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Markup;
 using Caliburn.Micro;
+using DomaMove.Engine;
+using DomaMove.UI;
 
 namespace DomaMove
 {
@@ -18,13 +20,13 @@ namespace DomaMove
         {
             base.OnStartup(sender, e);
 
-            string targetUrl = string.Empty;
-            string targetUser = string.Empty;
-            string targetPassword = string.Empty;
-
-            string sourceUrl = string.Empty;
-            string sourceUser = string.Empty;
-            string sourcePassword = string.Empty;
+            var targetUrl = string.Empty;
+            var targetUser = string.Empty;
+            var targetPassword = string.Empty;
+            
+            var sourceUrl = string.Empty;
+            var sourceUser = string.Empty;
+            var sourcePassword = string.Empty;
 
             if (e.Args.Length > 0)
             {
@@ -41,11 +43,17 @@ namespace DomaMove
                     sourceUrl = e.Args[3];
                     sourceUser = e.Args[4];
                     sourcePassword = e.Args[5];
-                }
-            }
+                }            
+            }            
 
-            var source = new DomaConnection { Url = sourceUrl, Username = sourceUser, Password = sourcePassword };           
-            var target = new DomaConnection { Url = targetUrl, Username = targetUser, Password = targetPassword };
+            var sourceParameters = new ConnectionParameters(sourceUrl, sourceUser, sourcePassword);
+            var targetParameters = new ConnectionParameters(targetUrl, targetUser, targetPassword);
+
+            var domaClientFactory = new DomaClientFactory();
+            var imageDownloader = new ImageDownloader();
+
+            var source = new DomaConnection(domaClientFactory, imageDownloader, sourceParameters);
+            var target = new DomaConnection(domaClientFactory, imageDownloader, targetParameters);
 
             var transferViewModel = new MoveViewModel(source, target);
             var windowManager = (WindowManager)GetInstance(typeof(WindowManager), null);

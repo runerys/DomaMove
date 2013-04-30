@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace DomaMove
+namespace DomaMove.UI
 {
     public class WaitCursor : IDisposable
     {
@@ -16,6 +16,11 @@ namespace DomaMove
         }
 
         public void Dispose()
+        {
+            Stop();
+        }
+
+        public void Stop()
         {
             Mouse.OverrideCursor = null;
         }
