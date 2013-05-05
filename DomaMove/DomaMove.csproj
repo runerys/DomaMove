@@ -124,6 +124,7 @@
     <Compile Include="Wpf\ConnectionSettingsStorage.cs" />
     <Compile Include="Wpf\SelectionItem.cs" />
     <Compile Include="Wpf\SelectionList.cs" />
+    <Compile Include="Wpf\SwitchBindingExtension.cs" />
     <Compile Include="Wpf\WaitCursor.cs" />
     <Compile Include="Wpf\PasswordHelper.cs" />
     <Page Include="UI\MoveView.xaml">

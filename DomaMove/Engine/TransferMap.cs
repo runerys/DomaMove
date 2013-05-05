@@ -128,7 +128,7 @@ namespace DomaMove.Engine
             var my = string.Format("{0}-{1}", MapInfo.Date, MapInfo.Name);
             var their = string.Format("{0}-{1}", other.MapInfo.Date, other.MapInfo.Name);
 
-            return String.Compare(my, their, System.StringComparison.Ordinal);
+            return String.Compare(my, their, StringComparison.Ordinal);
         }
     }
 }

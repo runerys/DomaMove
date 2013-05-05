@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using Caliburn.Micro;
 using DomaMove.Engine;
 using DomaMove.Tracking;
@@ -12,6 +13,8 @@ namespace DomaMove.UI
     {
         private readonly ITracker _tracker;
         private SelectionList<TransferMap> _transferMaps;
+        private bool _mapsArePrepared;
+        private string _summary;
 
         public MoveViewModel(DomaConnection source, DomaConnection target, ITracker tracker)
         {
@@ -25,9 +28,10 @@ namespace DomaMove.UI
 
         protected override void OnInitialize()
         {
-            base.OnInitialize();
-
+            DisplayName = "Transfer Doma Maps";
             _tracker.Startup();
+
+            base.OnInitialize();
         }
 
         protected override void OnDeactivate(bool close)
@@ -40,17 +44,32 @@ namespace DomaMove.UI
             base.OnDeactivate(close);
         }
 
+        public string Summary
+        {
+            get { return _summary; }
+            set
+            {
+                if (value == _summary) return;
+                _summary = value;
+                NotifyOfPropertyChange("Summary");
+            }
+        }
+
         public DomaConnection Source { get; set; }
         public DomaConnection Target { get; set; }
 
         public void TestSourceConnection()
         {
-            Source.TestConnection();
+            var waitCursor = WaitCursor.Start();
+            Source.TestConnection()
+                  .ContinueWith(t => waitCursor.Stop(), TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         public void TestTargetConnection()
         {
-            Target.TestConnection();
+            var waitCursor = WaitCursor.Start();
+            Target.TestConnection()
+                  .ContinueWith(t => waitCursor.Stop(), TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         public SelectionList<TransferMap> TransferMaps
@@ -61,6 +80,17 @@ namespace DomaMove.UI
                 if (Equals(value, _transferMaps)) return;
                 _transferMaps = value;
                 NotifyOfPropertyChange("TransferMaps");
+            }
+        }
+
+        public bool MapsArePrepared
+        {
+            get { return _mapsArePrepared; }
+            set
+            {
+                if (value.Equals(_mapsArePrepared)) return;
+                _mapsArePrepared = value;
+                NotifyOfPropertyChange("MapsArePrepared");
             }
         }
 
@@ -79,15 +109,26 @@ namespace DomaMove.UI
                     {
                         TransferMaps = new SelectionList<TransferMap>(Source.Maps);
                         waitCursor.Stop();
+                        Summary = Source.GetSummary();
+                        MapsArePrepared = Source.Maps.Count > 0;
                     }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
-        public void Transfer()
+        public void TransferAll()
+        {
+            TransferMaps.SelectAll();
+            TransferSelected();
+        }
+
+        public void TransferSelected()
         {
             var selectedMaps = TransferMaps.SelectedItems.ToList();
 
             if (selectedMaps.Any())
             {
+                if (AbortFromUserDialog(selectedMaps.Count))
+                    return;
+
                 var waitCursor = WaitCursor.Start();
 
                 Task.Factory.StartNew(() =>
@@ -102,6 +143,18 @@ namespace DomaMove.UI
                     })
                     .ContinueWith(t => waitCursor.Stop(), TaskScheduler.FromCurrentSynchronizationContext());
             }
+        }
+
+        private bool AbortFromUserDialog(int count)
+        {
+            string text = string.Format("Ready to transfer {0} maps. Shall we proceed?", count);
+
+            if (count == 1)
+                text = "Ready to transfer a single map. Shall we proceed?";
+
+            var result = MessageBox.Show(text, "Confirm transfer", MessageBoxButton.YesNo);
+
+            return result != MessageBoxResult.Yes;
         }
     }
 }

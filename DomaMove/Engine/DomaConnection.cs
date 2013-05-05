@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Caliburn.Micro;
@@ -353,6 +354,23 @@ namespace DomaMove.Engine
 
                 sourceMap.TargetCategory = foundCategory ?? Categories.OrderBy(x => x.ID).First();
             }
+        }
+
+        public string GetSummary()
+        {
+            var sb = new StringBuilder();
+            sb.AppendFormat("Found {0} maps, ", Maps.Count);
+
+            var fallbackCount = Maps.Count(x => x.Category.Name != x.TargetCategory.Name);
+            
+            if (fallbackCount > 0)
+                sb.AppendFormat("but had category problems on {0} of them.", fallbackCount);
+            else if (Maps.Count > 0)
+                sb.Append("and did perfect category matching.");
+            else 
+                sb.Append("check your connection settings.");
+
+            return sb.ToString();
         }
     }
 }

@@ -17,4 +17,5 @@ Future features:
 - Support source or target to be a local zip-archive. This means you can back up your maps.
 
 Btw:
-I won't deploy this to Windows Azure, as I would have to pay for transfer of loads of image data for users. If you want to port it to PHP, you're welcome.
+I won't deploy this to Windows Azure, as I would have to pay for transfer of loads of image data for users. 
+And my private web provider only supports PHP.  If you want to port it to PHP, you're welcome.

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
 
 namespace DomaMove.Wpf
 {
@@ -108,5 +109,7 @@ namespace DomaMove.Wpf
         }
 
         #endregion
+
+      
     }
 }
