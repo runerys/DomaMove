@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace DomaMove.UI
+namespace DomaMove.Wpf
 {
     public class WaitCursor : IDisposable
     {

@@ -3,8 +3,6 @@ using System.Windows.Controls;
 
 namespace DomaMove.Wpf
 {
-
-
     public static class PasswordHelper
     {
         public static readonly DependencyProperty PasswordProperty =

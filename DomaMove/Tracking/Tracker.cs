@@ -27,15 +27,20 @@ namespace DomaMove.Tracking
                 TrackEvent("Transfer", "Completed", "Failed", failedCount);
         }
 
-        public void TransferException(string message)
+        public void TransferException(Exception e)
         {
-            TrackEvent("Transfer", "Exception", message, 1);
+            TrackEvent("Exception", "Transfer", e.Message, 1);
         }
 
         public void Shutdown()
         {
             TrackEvent("Lifetime", "Shutdown", "Shutdown", 1);
             TrackEvent("Lifetime", "Shutdown", "SessionLengthInSeconds", (int)DateTime.UtcNow.Subtract(_startupTime).TotalSeconds);
+        }
+
+        public void UnhandledException(Exception e)
+        {
+            TrackEvent("Exception", "Unhandled", e.Message, 1);
         }
 
         private void TrackEvent(string category, string action, string label, int value)
@@ -51,11 +56,12 @@ namespace DomaMove.Tracking
     {
         void Startup();
         void TransferCompleted(int successfulCount, int failedCount);
-        void TransferException(string message);
+        void TransferException(Exception e);
         void Shutdown();
+        void UnhandledException(Exception e);
     }
 
-    public class  NullTracker : ITracker
+    public class NullTracker : ITracker
     {
         public void Startup()
         {
@@ -66,12 +72,17 @@ namespace DomaMove.Tracking
         {
         }
 
-        public void TransferException(string message)
+        public void TransferException(Exception e)
         {
         }
 
         public void Shutdown()
         {
+        }
+
+        public void UnhandledException(Exception e)
+        {
+            
         }
     }
 }

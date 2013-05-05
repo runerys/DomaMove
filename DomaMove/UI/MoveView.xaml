@@ -38,14 +38,19 @@
                 <Button x:Name="Transfer" Content="Copy selected maps to target" Margin="10,0" />
             </StackPanel>
         </StackPanel>
-        <DataGrid x:Name="Source_Maps" AutoGenerateColumns="False">
+        <DataGrid x:Name="TransferMaps" AutoGenerateColumns="False">
+            <DataGrid.ItemContainerStyle>
+                <Style TargetType="{x:Type DataGridRow}">
+                    <Setter Property="IsSelected" Value="{Binding IsSelected}"/>
+                </Style>
+            </DataGrid.ItemContainerStyle>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Category" Binding="{Binding Path=Category.Name}" IsReadOnly = "True" />
-                <DataGridTextColumn Header="Date" Binding="{Binding Path=MapInfo.Date}" IsReadOnly = "True"/>
-                <DataGridTextColumn Header="Name" Binding="{Binding Path=MapInfo.Name}" IsReadOnly = "True"/>
-                <DataGridCheckBoxColumn Header="Exists on Target" Binding="{Binding Path=ExistsOnTarget}" IsReadOnly = "True" />
-                <DataGridTextColumn Header="Target Category" Binding="{Binding Path=TargetCategory.Name}" IsReadOnly = "True" />
-                <DataGridTextColumn Header="Transfer Status" Binding="{Binding Path=TransferStatus}" IsReadOnly = "True" Width="*"/>
+                <DataGridTextColumn Header="Category" Binding="{Binding Path=Item.Category.Name}" IsReadOnly = "True" />
+                <DataGridTextColumn Header="Date" Binding="{Binding Path=Item.MapInfo.Date}" IsReadOnly = "True"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Path=Item.MapInfo.Name}" IsReadOnly = "True"/>
+                <DataGridCheckBoxColumn Header="Exists on Target" Binding="{Binding Path=Item.ExistsOnTarget}" IsReadOnly = "True" />
+                <DataGridTextColumn Header="Target Category" Binding="{Binding Path=Item.TargetCategory.Name}" IsReadOnly = "True" />
+                <DataGridTextColumn Header="Transfer Status" Binding="{Binding Path=Item.TransferStatus}" IsReadOnly = "True" Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
     </DockPanel>

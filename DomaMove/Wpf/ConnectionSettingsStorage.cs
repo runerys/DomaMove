@@ -2,13 +2,15 @@
 
 namespace DomaMove.Wpf
 {
-    public class ConnectionSettingsStorage : IConnectionSettingsStorage
+    public class ConnectionSettingsStorage
     {
-        public void Load(ConnectionSettings connectionSettings)
+        public ConnectionSettings Load(Role role)
         {
             var settings = Properties.Settings.Default;
 
-            if (connectionSettings.Role == Role.Source)
+            var connectionSettings = new ConnectionSettings(role);
+
+            if (role == Role.Source)
             {
                 connectionSettings.Url = settings.SourceUrl;
                 connectionSettings.User = settings.SourceUser;
@@ -20,6 +22,8 @@ namespace DomaMove.Wpf
                 connectionSettings.User = settings.TargetUser;
                 connectionSettings.Password = settings.TargetPassword;
             }
+
+            return connectionSettings;
         }
 
         public void Save(ConnectionSettings connectionSettings)

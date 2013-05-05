@@ -1,24 +1,26 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using Caliburn.Micro;
 using DomaMove.Engine;
 using DomaMove.Tracking;
+using DomaMove.Wpf;
 
 namespace DomaMove.UI
 {
     public class MoveViewModel : Screen
     {
         private readonly ITracker _tracker;
+        private SelectionList<TransferMap> _transferMaps;
 
         public MoveViewModel(DomaConnection source, DomaConnection target, ITracker tracker)
         {
             _tracker = tracker;
 
             Source = source;
-            Target = target;            
+            Target = target;
+
+            TransferMaps = new SelectionList<TransferMap>(new List<TransferMap>());
         }
 
         protected override void OnInitialize()
@@ -29,16 +31,14 @@ namespace DomaMove.UI
         }
 
         protected override void OnDeactivate(bool close)
-        {           
+        {
             if (close)
             {
-                Source.SaveConnectionParameters();
-                Target.SaveConnectionParameters();
                 _tracker.Shutdown();
             }
 
             base.OnDeactivate(close);
-        }     
+        }
 
         public DomaConnection Source { get; set; }
         public DomaConnection Target { get; set; }
@@ -53,6 +53,17 @@ namespace DomaMove.UI
             Target.TestConnection();
         }
 
+        public SelectionList<TransferMap> TransferMaps
+        {
+            get { return _transferMaps; }
+            set
+            {
+                if (Equals(value, _transferMaps)) return;
+                _transferMaps = value;
+                NotifyOfPropertyChange("TransferMaps");
+            }
+        }
+
         public void GetMaps()
         {
             var waitCursor = WaitCursor.Start();
@@ -60,37 +71,36 @@ namespace DomaMove.UI
             Task.Factory.StartNew(() =>
                 {
                     Task.WaitAll(Task.Factory.StartNew(() => Source.GetAllMaps()),
-                                Task.Factory.StartNew(() => Target.GetAllMaps()));
+                                 Task.Factory.StartNew(() => Target.GetAllMaps()));
 
                     Target.TagAllExistingMapsAndSetTargetCategories(Source);
                 })
-                .ContinueWith(t => Execute.OnUIThread(waitCursor.Stop));
+                .ContinueWith(t =>
+                    {
+                        TransferMaps = new SelectionList<TransferMap>(Source.Maps);
+                        waitCursor.Stop();
+                    }, TaskScheduler.FromCurrentSynchronizationContext());
         }
-
-        public List<SourceMap> SelectedMaps { get; set; }
 
         public void Transfer()
         {
-            var window = GetView() as Window;
+            var selectedMaps = TransferMaps.SelectedItems.ToList();
 
-            if (window == null)
-                return;
-
-            IList selectedItems = ((MoveView)window.Content).Source_Maps.SelectedItems;
-
-            SelectedMaps = new List<SourceMap>();
-
-            foreach (var selectedItem in selectedItems)
-            {
-                SelectedMaps.Add(selectedItem as SourceMap);
-            }
-
-            if (SelectedMaps != null && SelectedMaps.Any())
+            if (selectedMaps.Any())
             {
                 var waitCursor = WaitCursor.Start();
 
-                Task.Factory.StartNew(() => Target.UploadMaps(SelectedMaps))
-                            .ContinueWith(t => Execute.OnUIThread(waitCursor.Stop));
+                Task.Factory.StartNew(() =>
+                    {
+                        Target.UploadMaps(selectedMaps);
+                        _tracker.TransferCompleted(Target.TransferSuccessCount, Target.TransferSuccessFailed);
+
+                        foreach (var exception in Target.TransferExceptions)
+                        {
+                            _tracker.TransferException(exception);
+                        }
+                    })
+                    .ContinueWith(t => waitCursor.Stop(), TaskScheduler.FromCurrentSynchronizationContext());
             }
         }
     }

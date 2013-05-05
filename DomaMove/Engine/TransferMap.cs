@@ -1,9 +1,10 @@
-﻿using Caliburn.Micro;
+﻿using System;
+using Caliburn.Micro;
 using DomaMove.Doma;
 
 namespace DomaMove.Engine
 {
-    public class TransferMap : PropertyChangedBase
+    public class TransferMap : PropertyChangedBase, IComparable<TransferMap>
     {
         private readonly bool _sourceSupportsBlankImage;
         private readonly ImageDownloader _imageDownloader;
@@ -120,6 +121,14 @@ namespace DomaMove.Engine
             }
 
             TransferStatus = "Downloaded.";
+        }
+
+        public int CompareTo(TransferMap other)
+        {
+            var my = string.Format("{0}-{1}", MapInfo.Date, MapInfo.Name);
+            var their = string.Format("{0}-{1}", other.MapInfo.Date, other.MapInfo.Name);
+
+            return String.Compare(my, their, System.StringComparison.Ordinal);
         }
     }
 }

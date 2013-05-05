@@ -120,8 +120,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Reference.svcmap</DependentUpon>
     </Compile>
-    <Compile Include="Engine\SourceMap.cs" />
-    <Compile Include="UI\WaitCursor.cs" />
+    <Compile Include="Engine\TransferMap.cs" />
+    <Compile Include="Wpf\ConnectionSettingsStorage.cs" />
+    <Compile Include="Wpf\SelectionItem.cs" />
+    <Compile Include="Wpf\SelectionList.cs" />
+    <Compile Include="Wpf\WaitCursor.cs" />
     <Compile Include="Wpf\PasswordHelper.cs" />
     <Page Include="UI\MoveView.xaml">
       <SubType>Designer</SubType>

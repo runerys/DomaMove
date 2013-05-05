@@ -13,6 +13,10 @@ namespace DomaMove
 {
     public class Bootstrapper : BootstrapperBase
     {
+        private ConnectionSettingsStorage _settingsStorage = new ConnectionSettingsStorage();
+        private ConnectionSettings _sourceSettings, _targetSettings;
+        private ITracker _tracker;
+
         public Bootstrapper()
             : base(true)
         {
@@ -22,56 +26,40 @@ namespace DomaMove
         protected override void OnStartup(object sender, StartupEventArgs e)
         {
             base.OnStartup(sender, e);
-
-            var targetUrl = string.Empty;
-            var targetUser = string.Empty;
-            var targetPassword = string.Empty;
-            
-            var sourceUrl = string.Empty;
-            var sourceUser = string.Empty;
-            var sourcePassword = string.Empty;
-
-            var skipTracking = false;
-
-            if (e.Args.Length > 0)
-            {
-                targetUrl = e.Args[0];
-
-                if (e.Args.Length > 2)
-                {
-                    targetUser = e.Args[1];
-                    targetPassword = e.Args[2];
-                }
-
-                if (e.Args.Length == 6)
-                {
-                    sourceUrl = e.Args[3];
-                    sourceUser = e.Args[4];
-                    sourcePassword = e.Args[5];
-                }
-
-                skipTracking = e.Args.Any(x => x.ToLower() == "skiptracking");
-            }
-
-            ITracker tracker = new Tracker();
-
-            if (skipTracking)
-                tracker = new NullTracker();
-
-            var settingsStorage = new ConnectionSettingsStorage();
-            var sourceParameters = new ConnectionSettings(sourceUrl, sourceUser, sourcePassword, Role.Source, settingsStorage);
-            var targetParameters = new ConnectionSettings(targetUrl, targetUser, targetPassword, Role.Target, settingsStorage);
+                                  
+            _settingsStorage = new ConnectionSettingsStorage();
+            _sourceSettings = _settingsStorage.Load(Role.Source);
+            _targetSettings = _settingsStorage.Load(Role.Target);
 
             var domaClientFactory = new DomaClientFactory();
             var imageDownloader = new ImageDownloader();
 
-            var source = new DomaConnection(domaClientFactory, imageDownloader, sourceParameters);
-            var target = new DomaConnection(domaClientFactory, imageDownloader, targetParameters);
+            var source = new DomaConnection(domaClientFactory, imageDownloader, _sourceSettings);
+            var target = new DomaConnection(domaClientFactory, imageDownloader, _targetSettings);
 
-            var transferViewModel = new MoveViewModel(source, target, tracker);
+            _tracker = new Tracker();
+
+            if (e.Args.Any(x => x != null && x.ToLower() == "skiptracking"))
+                _tracker = new NullTracker();
+
+            var transferViewModel = new MoveViewModel(source, target, _tracker);
             var windowManager = (WindowManager)GetInstance(typeof(WindowManager), null);
 
             windowManager.ShowWindow(transferViewModel);
+        }
+
+        protected override void OnExit(object sender, System.EventArgs e)
+        {
+            if (_settingsStorage != null)
+            {
+                if (_sourceSettings != null)
+                    _settingsStorage.Save(_sourceSettings);
+
+                if (_targetSettings != null)
+                    _settingsStorage.Save(_targetSettings);
+            }
+
+            base.OnExit(sender, e);
         }
 
         protected override void Configure()
@@ -80,8 +68,13 @@ namespace DomaMove
             Thread.CurrentThread.CurrentUICulture = Thread.CurrentThread.CurrentCulture;
 
             FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
-        }      
-    }
+        }
 
-   
+        protected override void OnUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        {
+            _tracker.UnhandledException(e.Exception);
+
+            base.OnUnhandledException(sender, e);
+        }
+    }   
 }
