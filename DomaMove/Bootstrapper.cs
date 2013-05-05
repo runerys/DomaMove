@@ -1,10 +1,13 @@
 ﻿using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Markup;
 using Caliburn.Micro;
 using DomaMove.Engine;
+using DomaMove.Tracking;
 using DomaMove.UI;
+using DomaMove.Wpf;
 
 namespace DomaMove
 {
@@ -28,6 +31,8 @@ namespace DomaMove
             var sourceUser = string.Empty;
             var sourcePassword = string.Empty;
 
+            var skipTracking = false;
+
             if (e.Args.Length > 0)
             {
                 targetUrl = e.Args[0];
@@ -43,11 +48,19 @@ namespace DomaMove
                     sourceUrl = e.Args[3];
                     sourceUser = e.Args[4];
                     sourcePassword = e.Args[5];
-                }            
-            }            
+                }
 
-            var sourceParameters = new ConnectionParameters(sourceUrl, sourceUser, sourcePassword);
-            var targetParameters = new ConnectionParameters(targetUrl, targetUser, targetPassword);
+                skipTracking = e.Args.Any(x => x.ToLower() == "skiptracking");
+            }
+
+            ITracker tracker = new Tracker();
+
+            if (skipTracking)
+                tracker = new NullTracker();
+
+            var settingsStorage = new ConnectionSettingsStorage();
+            var sourceParameters = new ConnectionSettings(sourceUrl, sourceUser, sourcePassword, Role.Source, settingsStorage);
+            var targetParameters = new ConnectionSettings(targetUrl, targetUser, targetPassword, Role.Target, settingsStorage);
 
             var domaClientFactory = new DomaClientFactory();
             var imageDownloader = new ImageDownloader();
@@ -55,7 +68,7 @@ namespace DomaMove
             var source = new DomaConnection(domaClientFactory, imageDownloader, sourceParameters);
             var target = new DomaConnection(domaClientFactory, imageDownloader, targetParameters);
 
-            var transferViewModel = new MoveViewModel(source, target);
+            var transferViewModel = new MoveViewModel(source, target, tracker);
             var windowManager = (WindowManager)GetInstance(typeof(WindowManager), null);
 
             windowManager.ShowWindow(transferViewModel);
@@ -67,6 +80,8 @@ namespace DomaMove
             Thread.CurrentThread.CurrentUICulture = Thread.CurrentThread.CurrentCulture;
 
             FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
-        }     
+        }      
     }
+
+   
 }

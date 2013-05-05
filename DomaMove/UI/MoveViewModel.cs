@@ -5,16 +5,40 @@ using System.Threading.Tasks;
 using System.Windows;
 using Caliburn.Micro;
 using DomaMove.Engine;
+using DomaMove.Tracking;
 
 namespace DomaMove.UI
 {
     public class MoveViewModel : Screen
     {
-        public MoveViewModel(DomaConnection source, DomaConnection target)
+        private readonly ITracker _tracker;
+
+        public MoveViewModel(DomaConnection source, DomaConnection target, ITracker tracker)
         {
+            _tracker = tracker;
+
             Source = source;
-            Target = target;
+            Target = target;            
         }
+
+        protected override void OnInitialize()
+        {
+            base.OnInitialize();
+
+            _tracker.Startup();
+        }
+
+        protected override void OnDeactivate(bool close)
+        {           
+            if (close)
+            {
+                Source.SaveConnectionParameters();
+                Target.SaveConnectionParameters();
+                _tracker.Shutdown();
+            }
+
+            base.OnDeactivate(close);
+        }     
 
         public DomaConnection Source { get; set; }
         public DomaConnection Target { get; set; }

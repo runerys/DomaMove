@@ -22,5 +22,77 @@ namespace DomaMove.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SourceUrl {
+            get {
+                return ((string)(this["SourceUrl"]));
+            }
+            set {
+                this["SourceUrl"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SourceUser {
+            get {
+                return ((string)(this["SourceUser"]));
+            }
+            set {
+                this["SourceUser"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SourcePassword {
+            get {
+                return ((string)(this["SourcePassword"]));
+            }
+            set {
+                this["SourcePassword"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string TargetUrl {
+            get {
+                return ((string)(this["TargetUrl"]));
+            }
+            set {
+                this["TargetUrl"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string TargetUser {
+            get {
+                return ((string)(this["TargetUser"]));
+            }
+            set {
+                this["TargetUser"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string TargetPassword {
+            get {
+                return ((string)(this["TargetPassword"]));
+            }
+            set {
+                this["TargetPassword"] = value;
+            }
+        }
     }
 }

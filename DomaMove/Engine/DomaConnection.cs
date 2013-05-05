@@ -11,30 +11,32 @@ namespace DomaMove.Engine
     {
         private readonly DomaClientFactory _clientFactory;
         private readonly ImageDownloader _imageDownloader;
+        private readonly ConnectionSettings _connectionSettings;
 
         private List<SourceMap> _maps;
         private string _status;
         private bool? _supportsPublishWithPreUpload;
 
-        public DomaConnection(DomaClientFactory clientFactory, ImageDownloader imageDownloader, ConnectionParameters connectionParameters)
+        public DomaConnection(DomaClientFactory clientFactory, ImageDownloader imageDownloader, ConnectionSettings connectionSettings)
         {
             _clientFactory = clientFactory;
             _imageDownloader = imageDownloader;
+            _connectionSettings = connectionSettings;
 
-            Url = connectionParameters.Url;
-            Username = connectionParameters.User;
-            Password = connectionParameters.Password;
+            Url = connectionSettings.Url;
+            Username = connectionSettings.User;
+            Password = connectionSettings.Password;
 
             Maps = new List<SourceMap>();
             Categories = new List<Category>();
         }
 
-        public string Url { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
+        public string Url { get { return _connectionSettings.Url; } set { _connectionSettings.Url = value; } }
+        public string Username { get { return _connectionSettings.User; } set { _connectionSettings.User = value; } }
+        public string Password { get { return _connectionSettings.Password; } set { _connectionSettings.Password = value; } }
+
         private List<Category> Categories { get; set; }
         private int UserId { get; set; }
-
 
         public string Status
         {
@@ -315,6 +317,11 @@ namespace DomaMove.Engine
 
                 sourceMap.TargetCategory = foundCategory ?? Categories.OrderBy(x => x.ID).First();
             }
+        }
+
+        public void SaveConnectionSettings()
+        {
+            _connectionSettings.Save();
         }
     }
 }
