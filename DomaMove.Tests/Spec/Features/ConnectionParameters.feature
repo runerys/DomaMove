@@ -5,19 +5,16 @@
 
 @mytag
 Scenario: Enter Doma uri ending with slash
-	Given A blank input field	
+	Given A blank url field	
 	When I enter "http://mydoma.com/"
-	And valid username and password
 	Then the connection check should be made to a webservice at "http://mydoma.com/webservice.php"
 
-	Scenario: Enter Doma uri ending without slash
-	Given A blank input field	
+Scenario: Enter Doma uri ending without slash
+	Given A blank url field	
 	When I enter "http://mydoma.com"
-	And valid username and password
 	Then the connection check should be made to a webservice at "http://mydoma.com/webservice.php"
 
 Scenario: Enter Doma uri ending with webservice
-	Given A blank input field	
-	When I enter "http://mydoma.com/webservice.php"
-	And valid username and password
+	Given A blank url field	
+	When I enter "http://mydoma.com/webservice.php"	
 	Then the connection check should be made to a webservice at "http://mydoma.com/webservice.php"

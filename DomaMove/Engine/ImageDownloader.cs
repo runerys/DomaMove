@@ -6,12 +6,12 @@ namespace DomaMove.Engine
 {
     public class ImageDownloader
     {
-        public int ConnectionLimit
+        public virtual int ConnectionLimit
         {
             get { return ServicePointManager.DefaultConnectionLimit; }
         }
 
-        public byte[] DownloadImage(string uri)
+        public virtual byte[] DownloadImage(string uri)
         {
             try
             {

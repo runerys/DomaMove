@@ -33,10 +33,11 @@ namespace DomaMove.Engine
             Maps = new List<TransferMap>();
             Categories = new List<Category>();
         }
+        public ConnectionSettings Settings { get { return _connectionSettings; } }
 
-        public string Url { get { return _connectionSettings.Url; } set { _connectionSettings.Url = value; } }
-        public string Username { get { return _connectionSettings.User; } set { _connectionSettings.User = value; } }
-        public string Password { get { return _connectionSettings.Password; } set { _connectionSettings.Password = value; } }
+        private string Url { get { return _connectionSettings.Url; } set { _connectionSettings.Url = value; } }
+        private string Username { get { return _connectionSettings.User; } set { _connectionSettings.User = value; } }
+        private string Password { get { return _connectionSettings.Password; } set { _connectionSettings.Password = value; } }
 
         private List<Category> Categories { get; set; }
         private int UserId { get; set; }
@@ -63,12 +64,19 @@ namespace DomaMove.Engine
             }
         }
 
+        private string _lastConnectionSettingsHash;
+
         private bool IsConnectionOk
         {
             get
             {
-                if (string.IsNullOrEmpty(Status))
+                var connectionHash = _connectionSettings.GetHash();
+
+                if (connectionHash != _lastConnectionSettingsHash)
+                {
                     TestConnection().Wait();
+                    _lastConnectionSettingsHash = connectionHash;
+                }
 
                 return Status == "OK";
             }
@@ -103,7 +111,12 @@ namespace DomaMove.Engine
 
         private string GetBaseUri()
         {
-            return Url.ToLower().Replace("/webservice.php", string.Empty);
+            var url = Url.ToLower().Replace("/webservice.php", string.Empty);
+
+            if (url.EndsWith("/"))
+                url = url.Substring(0, url.Length - 1);
+
+            return url;
         }
 
         public Task TestConnection()
@@ -118,13 +131,10 @@ namespace DomaMove.Engine
                     if (t.Status == TaskStatus.Faulted)
                     {
                         Status = "FAILED";
-                        doma.Abort();
                         return;
                     }
 
                     ConnectResponse response = t.Result;
-
-                    doma.Close();
 
                     if (response.Success)
                     {
@@ -139,9 +149,9 @@ namespace DomaMove.Engine
             return getResultTask;
         }
 
-        private DOMAServicePortTypeClient CreateDomaClient()
+        private DOMAServicePortType CreateDomaClient()
         {
-            return _clientFactory.Create(GetBaseUri());
+            return _clientFactory.Create(GetBaseUri() + "/webservice.php");
         }
 
         public void UploadMaps(List<TransferMap> selectedMaps)
@@ -323,7 +333,7 @@ namespace DomaMove.Engine
             }
         }
 
-        private Task<UploadPartialFileResponse> UploadPartialFile(byte[] image, string fileExtension, DOMAServicePortTypeClient doma)
+        private Task<UploadPartialFileResponse> UploadPartialFile(byte[] image, string fileExtension, DOMAServicePortType doma)
         {
             var request = new UploadPartialFileRequest
                 {
@@ -362,12 +372,12 @@ namespace DomaMove.Engine
             sb.AppendFormat("Found {0} maps, ", Maps.Count);
 
             var fallbackCount = Maps.Count(x => x.Category.Name != x.TargetCategory.Name);
-            
+
             if (fallbackCount > 0)
                 sb.AppendFormat("but had category problems on {0} of them.", fallbackCount);
             else if (Maps.Count > 0)
                 sb.Append("and did perfect category matching.");
-            else 
+            else
                 sb.Append("check your connection settings.");
 
             return sb.ToString();

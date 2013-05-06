@@ -75,12 +75,10 @@ namespace DomaMove.Tests.Spec.Features
 #line 7
 this.ScenarioSetup(scenarioInfo);
 #line 8
- testRunner.Given("A blank input field", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+ testRunner.Given("A blank url field", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
 #line 9
  testRunner.When("I enter \"http://mydoma.com/\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
 #line 10
- testRunner.And("valid username and password", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-#line 11
  testRunner.Then("the connection check should be made to a webservice at \"http://mydoma.com/webserv" +
                     "ice.php\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
 #line hidden
@@ -92,15 +90,13 @@ this.ScenarioSetup(scenarioInfo);
         public virtual void EnterDomaUriEndingWithoutSlash()
         {
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Enter Doma uri ending without slash", ((string[])(null)));
+#line 12
+this.ScenarioSetup(scenarioInfo);
 #line 13
- this.ScenarioSetup(scenarioInfo);
+ testRunner.Given("A blank url field", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
 #line 14
- testRunner.Given("A blank input field", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-#line 15
  testRunner.When("I enter \"http://mydoma.com\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-#line 16
- testRunner.And("valid username and password", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-#line 17
+#line 15
  testRunner.Then("the connection check should be made to a webservice at \"http://mydoma.com/webserv" +
                     "ice.php\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
 #line hidden
@@ -112,15 +108,13 @@ this.ScenarioSetup(scenarioInfo);
         public virtual void EnterDomaUriEndingWithWebservice()
         {
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Enter Doma uri ending with webservice", ((string[])(null)));
-#line 19
+#line 17
 this.ScenarioSetup(scenarioInfo);
-#line 20
- testRunner.Given("A blank input field", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
-#line 21
+#line 18
+ testRunner.Given("A blank url field", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Given ");
+#line 19
  testRunner.When("I enter \"http://mydoma.com/webservice.php\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
-#line 22
- testRunner.And("valid username and password", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-#line 23
+#line 20
  testRunner.Then("the connection check should be made to a webservice at \"http://mydoma.com/webserv" +
                     "ice.php\"", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
 #line hidden

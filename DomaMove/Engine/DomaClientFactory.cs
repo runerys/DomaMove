@@ -6,7 +6,7 @@ namespace DomaMove.Engine
 {
     public class DomaClientFactory
     {
-        public DOMAServicePortTypeClient Create(string baseUri)
+        public virtual DOMAServicePortType Create(string serviceUri)
         {
             var binding = new BasicHttpBinding
             {
@@ -20,9 +20,7 @@ namespace DomaMove.Engine
                     MaxDepth = int.MaxValue,
                     MaxStringContentLength = int.MaxValue
                 }
-            };
-
-            var serviceUri = baseUri + "/webservice.php";
+            };            
          
             return new DOMAServicePortTypeClient(binding, new EndpointAddress(serviceUri));
         }

@@ -50,39 +50,5 @@ namespace DomaMove.Tracking
                 tracker.TrackEventAsync(category, action, label, value);
             }
         }
-    }   
-
-    public interface ITracker
-    {
-        void Startup();
-        void TransferCompleted(int successfulCount, int failedCount);
-        void TransferException(Exception e);
-        void Shutdown();
-        void UnhandledException(Exception e);
-    }
-
-    public class NullTracker : ITracker
-    {
-        public void Startup()
-        {
-            
-        }
-
-        public void TransferCompleted(int successfulCount, int failedCount)
-        {
-        }
-
-        public void TransferException(Exception e)
-        {
-        }
-
-        public void Shutdown()
-        {
-        }
-
-        public void UnhandledException(Exception e)
-        {
-            
-        }
     }
 }

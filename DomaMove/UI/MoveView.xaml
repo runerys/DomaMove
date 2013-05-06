@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:w="clr-namespace:DomaMove.Wpf"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="1200" MinHeight="600" MaxWidth="1900" MaxHeight="1000"  Padding="20">
+             d:DesignHeight="300" d:DesignWidth="1200" MinHeight="600" MaxWidth="1500" MaxHeight="1000"  Padding="20">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </UserControl.Resources>
@@ -13,24 +13,24 @@
             <GroupBox Header="Source" Padding="5">
                 <StackPanel Orientation="Horizontal">
                     <Label>Address</Label>
-                    <TextBox x:Name="Source_Url" Width="350"/>
+                    <TextBox x:Name="Source_Settings_Url" Width="350"/>
                     <Label>User</Label>
-                    <TextBox x:Name="Source_Username" Width="100" />
+                    <TextBox x:Name="Source_Settings_User" Width="100" />
                     <Label>Password</Label>
-                    <PasswordBox Width="100" PasswordChar="*" w:PasswordHelper.Attach="True" w:PasswordHelper.Password="{Binding Source.Password, Mode=TwoWay}"/>
-                    <Button x:Name="TestSourceConnection" Content="Test" Margin="10"/>
+                    <PasswordBox Width="100" PasswordChar="*" w:PasswordHelper.Attach="True" w:PasswordHelper.Password="{Binding Source.Settings.Password, Mode=TwoWay}"/>
+                    <!--<Button x:Name="TestSourceConnection" Content="Test" Margin="10"/>-->
                     <Label x:Name="Source_Status" />
                 </StackPanel>
             </GroupBox>
             <GroupBox Header="Target" Padding="5">
                 <StackPanel Orientation="Horizontal">
                     <Label>Address</Label>
-                    <TextBox x:Name="Target_Url" Width="350"/>
+                    <TextBox x:Name="Target_Settings_Url" Width="350"/>
                     <Label>User</Label>
-                    <TextBox x:Name="Target_Username" Width="100" />
+                    <TextBox x:Name="Target_Settings_User" Width="100" />
                     <Label>Password</Label>
-                    <PasswordBox Width="100" PasswordChar="*" w:PasswordHelper.Attach="True" w:PasswordHelper.Password="{Binding Target.Password, Mode=TwoWay}"/>
-                    <Button x:Name="TestTargetConnection" Content="Test" Margin="10" />
+                    <PasswordBox Width="100" PasswordChar="*" w:PasswordHelper.Attach="True" w:PasswordHelper.Password="{Binding Target.Settings.Password, Mode=TwoWay}"/>
+                    <!--<Button x:Name="TestTargetConnection" Content="Test" Margin="10" />-->
                     <Label x:Name="Target_Status" />
                 </StackPanel>
             </GroupBox>

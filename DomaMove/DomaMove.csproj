@@ -112,7 +112,8 @@
     <Compile Include="Engine\DomaClientFactory.cs" />
     <Compile Include="Engine\DomaConnection.cs" />
     <Compile Include="Engine\ImageDownloader.cs" />
-    <Compile Include="Settings.cs" />
+    <Compile Include="Tracking\ITracker.cs" />
+    <Compile Include="Tracking\NullTracker.cs" />
     <Compile Include="Tracking\Tracker.cs" />
     <Compile Include="UI\MoveViewModel.cs" />
     <Compile Include="Service References\Doma\Reference.cs">
