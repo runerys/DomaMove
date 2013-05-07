@@ -9,7 +9,6 @@ Features:
 - Handles both jpg and png image formats.
 - Parallel processing of transfers - limited to system settings (usually 2).
 - Reports anonymous usage to Google Analytics (just to see if anyone actually uses it).
-- Click Once Deployment for easy installation. Though, I guess you'll only have to run it once :P
 - Remembers connection settings between runs
 - Only requires .NET 4 Client Profile (I had to do async Tasks without async/await, but hopefully it makes a better installer experience).
 

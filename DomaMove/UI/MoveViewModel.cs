@@ -15,21 +15,22 @@ namespace DomaMove.UI
         private SelectionList<TransferMap> _transferMaps;
         private bool _mapsArePrepared;
         private string _summary;
+        private bool _showSummary;
 
         public MoveViewModel(DomaConnection source, DomaConnection target, ITracker tracker)
         {
             _tracker = tracker;
 
             Source = source;
-            Target = target;
-
-            TransferMaps = new SelectionList<TransferMap>(new List<TransferMap>());
+            Target = target;            
         }
 
         protected override void OnInitialize()
         {
             DisplayName = "Transfer Doma Maps";
             _tracker.Startup();
+
+            TransferMaps = new SelectionList<TransferMap>(new List<TransferMap>());
 
             base.OnInitialize();
         }
@@ -51,7 +52,21 @@ namespace DomaMove.UI
             {
                 if (value == _summary) return;
                 _summary = value;
+                
+                ShowSummary = !string.IsNullOrEmpty(_summary);
+
                 NotifyOfPropertyChange("Summary");
+            }
+        }
+
+        public bool ShowSummary
+        {
+            get { return _showSummary; }
+            set
+            {
+                if (value.Equals(_showSummary)) return;
+                _showSummary = value;
+                NotifyOfPropertyChange("ShowSummary");
             }
         }
 

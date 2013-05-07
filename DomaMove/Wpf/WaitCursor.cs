@@ -17,7 +17,13 @@ namespace DomaMove.Wpf
 
         public void Dispose()
         {
-            Stop();
+           Dispose(true);
+        }
+
+        protected virtual void Dispose(bool cleanManagedAndNative)
+        {
+            if(cleanManagedAndNative)
+                Stop();
         }
 
         public void Stop()

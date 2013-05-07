@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Configuration;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Windows;
@@ -11,7 +12,7 @@ using DomaMove.Wpf;
 
 namespace DomaMove
 {
-    public class Bootstrapper : BootstrapperBase
+    public sealed class Bootstrapper : BootstrapperBase
     {
         private ConnectionSettingsStorage _settingsStorage = new ConnectionSettingsStorage();
         private ConnectionSettings _sourceSettings, _targetSettings;
@@ -20,13 +21,13 @@ namespace DomaMove
         public Bootstrapper()
             : base(true)
         {
-            Start();
-        }
+            StartRuntime();
+        }        
 
         protected override void OnStartup(object sender, StartupEventArgs e)
         {
             base.OnStartup(sender, e);
-                                  
+
             _settingsStorage = new ConnectionSettingsStorage();
             _sourceSettings = _settingsStorage.Load(Role.Source);
             _targetSettings = _settingsStorage.Load(Role.Target);
@@ -39,7 +40,7 @@ namespace DomaMove
 
             _tracker = new Tracker();
 
-            if (e.Args.Any(x => x != null && x.ToLower() == "skiptracking"))
+            if (ConfigurationManager.AppSettings.AllKeys.Any(x => x == "skiptracking") && ConfigurationManager.AppSettings["skiptracking"] == "true")
                 _tracker = new NullTracker();
 
             var transferViewModel = new MoveViewModel(source, target, _tracker);
@@ -76,5 +77,5 @@ namespace DomaMove
 
             base.OnUnhandledException(sender, e);
         }
-    }   
+    }
 }

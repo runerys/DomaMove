@@ -22,8 +22,6 @@ namespace DomaMove.Engine
 
             Category = category;
             MapInfo = mapInfo;
-
-            ExistsOnTarget = false;
         }
 
         public bool? ExistsOnTarget

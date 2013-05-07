@@ -30,8 +30,8 @@ namespace DomaMove.Engine
             Username = connectionSettings.User;
             Password = connectionSettings.Password;
 
-            Maps = new List<TransferMap>();
-            Categories = new List<Category>();
+            //Maps = new List<TransferMap>();
+            //Categories = new List<Category>();
         }
         public ConnectionSettings Settings { get { return _connectionSettings; } }
 
