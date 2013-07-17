@@ -1,4 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Windows;
 using GoogleAnalyticsTracker;
 
 namespace DomaMove.Tracking
@@ -27,9 +33,47 @@ namespace DomaMove.Tracking
                 TrackEvent("Transfer", "Completed", "Failed", failedCount);
         }
 
-        public void TransferException(Exception e)
+        public void TransferException(IEnumerable<Exception> exceptions)
         {
-            TrackEvent("Exception", "Transfer", e.Message, 1);
+            var enumerable = exceptions as IList<Exception> ?? exceptions.ToList();
+
+            foreach (var exception in enumerable)
+            {
+                TrackEvent("Exception", "Transfer", exception.Message, 1);
+            }
+
+            try
+            {
+                var sb = new StringBuilder();
+
+                foreach (var exception in enumerable)
+                {
+                    sb.AppendLine(string.Format("=== {0} ===", DateTime.UtcNow));
+                    sb.Append(exception);
+                }
+
+                var domaPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                                            "DomaMove");
+
+                if(!Directory.Exists(domaPath))
+                    Directory.CreateDirectory(domaPath);
+
+                var file = Path.Combine(domaPath, _session.GenerateSessionId() + ".txt");
+
+                File.WriteAllText(file, sb.ToString());
+
+                if (
+                    MessageBox.Show("Errors occured. Details logged to: " + file + " Open log file?", "Error logged",
+                                    MessageBoxButton.YesNo) ==
+                    MessageBoxResult.Yes)
+                {
+                    Process.Start(file);
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }           
         }
 
         public void Shutdown()
@@ -45,7 +89,7 @@ namespace DomaMove.Tracking
 
         private void TrackEvent(string category, string action, string label, int value)
         {
-            using (var tracker = new GoogleAnalyticsTracker.Tracker("UA-40669331-1", "DomaMove.no", _session))
+            using (var tracker = new GoogleAnalyticsTracker.Tracker("UA-40669331-1", "DomaMove", _session))
             {
                 tracker.TrackEventAsync(category, action, label, value);
             }

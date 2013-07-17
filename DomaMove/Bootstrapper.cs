@@ -17,6 +17,7 @@ namespace DomaMove
         private ConnectionSettingsStorage _settingsStorage = new ConnectionSettingsStorage();
         private ConnectionSettings _sourceSettings, _targetSettings;
         private ITracker _tracker;
+        private bool _messageboxOnError;
 
         public Bootstrapper()
             : base(true)
@@ -42,6 +43,10 @@ namespace DomaMove
 
             if (ConfigurationManager.AppSettings.AllKeys.Any(x => x == "skiptracking") && ConfigurationManager.AppSettings["skiptracking"] == "true")
                 _tracker = new NullTracker();
+
+            if (ConfigurationManager.AppSettings.AllKeys.Any(x => x == "messageboxerrors") &&
+                ConfigurationManager.AppSettings["messageboxerrors"] == "true")
+                _messageboxOnError = true;
 
             var transferViewModel = new MoveViewModel(source, target, _tracker);
             var windowManager = (WindowManager)GetInstance(typeof(WindowManager), null);
@@ -73,9 +78,12 @@ namespace DomaMove
 
         protected override void OnUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
+            if(_messageboxOnError)
+                MessageBox.Show(e.ToString());
+
             _tracker.UnhandledException(e.Exception);
 
-            base.OnUnhandledException(sender, e);
+            e.Handled = true;
         }
     }
 }

@@ -30,8 +30,8 @@ namespace DomaMove.Engine
             Username = connectionSettings.User;
             Password = connectionSettings.Password;
 
-            //Maps = new List<TransferMap>();
-            //Categories = new List<Category>();
+            Maps = new List<TransferMap>();
+            Categories = new List<Category>();
         }
         public ConnectionSettings Settings { get { return _connectionSettings; } }
 
@@ -223,18 +223,24 @@ namespace DomaMove.Engine
         }
 
         private void PublishMap(TransferMap transferMap, MapInfo mapInfo)
-        {
-            var doma = CreateDomaClient();
-
-            mapInfo.MapImageFileExtension = transferMap.FileExtension;
-            mapInfo.MapImageData = transferMap.MapImage;
-
-            transferMap.TransferStatus = "Publishing...";
-
+        {         
             try
             {
-                var publishMapRequest = new PublishMapRequest { MapInfo = mapInfo, Username = Username, Password = Password };
-                var publishMapTask = Task<PublishMapResponse>.Factory.FromAsync(doma.BeginPublishMap, doma.EndPublishMap, publishMapRequest, null);
+                var doma = CreateDomaClient();
+
+                mapInfo.MapImageFileExtension = transferMap.FileExtension;
+                mapInfo.MapImageData = transferMap.MapImage;
+
+                transferMap.TransferStatus = "Publishing...";
+
+                var publishMapRequest = new PublishMapRequest
+                    {
+                        MapInfo = mapInfo,
+                        Username = Username,
+                        Password = Password
+                    };
+                var publishMapTask = Task<PublishMapResponse>.Factory.FromAsync(doma.BeginPublishMap, doma.EndPublishMap,
+                                                                                publishMapRequest, null);
 
                 publishMapTask.Wait();
 
@@ -242,7 +248,9 @@ namespace DomaMove.Engine
                 {
                     _transferExceptions.Add(publishMapTask.Exception);
 
-                    transferMap.TransferStatus = publishMapTask.Exception != null ? publishMapTask.Exception.Message : "Failed";
+                    transferMap.TransferStatus = publishMapTask.Exception != null
+                                                     ? publishMapTask.Exception.Message
+                                                     : "Failed";
                     return;
                 }
 
@@ -260,23 +268,32 @@ namespace DomaMove.Engine
             }
             catch (AggregateException ae)
             {
-                foreach (var innerException in ae.Flatten().InnerExceptions)
+                var innerExceptions = ae.Flatten().InnerExceptions;
+
+                foreach (var innerException in innerExceptions)
                 {
                     _transferExceptions.Add(innerException);
                 }
 
-                transferMap.TransferStatus = "Publishing failed badly. " + ae.Message;
+                transferMap.TransferStatus = "Publishing failed badly: " +
+                                             string.Join(", ", innerExceptions.Select(x => x.Message));
+            }
+            catch (Exception e)
+            {
+                _transferExceptions.Add(e);
+
+                transferMap.TransferStatus = "Publishing failed badly: " + e.Message;
             }
         }
 
         private void PublishWithPreUpload(TransferMap transferMap, MapInfo mapInfo)
-        {
-            var doma = CreateDomaClient();
-
-            mapInfo.MapImageFileExtension = transferMap.FileExtension;
-
+        {          
             try
             {
+                var doma = CreateDomaClient();
+
+                mapInfo.MapImageFileExtension = transferMap.FileExtension;
+
                 transferMap.TransferStatus = "Uploading...";
 
                 var uploadMapTask = UploadPartialFile(transferMap.MapImage, transferMap.FileExtension, doma);
@@ -324,12 +341,20 @@ namespace DomaMove.Engine
             }
             catch (AggregateException ae)
             {
-                foreach (var innerException in ae.Flatten().InnerExceptions)
+                var innerExceptions = ae.Flatten().InnerExceptions;
+
+                foreach (var innerException in innerExceptions)
                 {
                     _transferExceptions.Add(innerException);
                 }
 
-                transferMap.TransferStatus = "Publishing failed badly. " + ae.Message;
+                transferMap.TransferStatus = "Publishing failed badly: " + string.Join(", ", innerExceptions.Select(x => x.Message));
+            }
+            catch (Exception e)
+            {
+                _transferExceptions.Add(e);
+
+                transferMap.TransferStatus = "Publishing failed badly: " + e.Message;
             }
         }
 
@@ -348,6 +373,9 @@ namespace DomaMove.Engine
 
         public void TagAllExistingMapsAndSetTargetCategories(DomaConnection source)
         {
+            if (source.Status != "OK")
+                return;
+
             foreach (TransferMap sourceMap in source.Maps)
             {
                 sourceMap.ExistsOnTarget = (

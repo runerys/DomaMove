@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace DomaMove.Tracking
 {
@@ -6,7 +7,7 @@ namespace DomaMove.Tracking
     {
         void Startup();
         void TransferCompleted(int successfulCount, int failedCount);
-        void TransferException(Exception e);
+        void TransferException(IEnumerable<Exception> exceptions);
         void Shutdown();
         void UnhandledException(Exception e);
     }

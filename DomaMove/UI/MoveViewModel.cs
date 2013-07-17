@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using Caliburn.Micro;
@@ -22,7 +23,7 @@ namespace DomaMove.UI
             _tracker = tracker;
 
             Source = source;
-            Target = target;            
+            Target = target;
         }
 
         protected override void OnInitialize()
@@ -52,7 +53,7 @@ namespace DomaMove.UI
             {
                 if (value == _summary) return;
                 _summary = value;
-                
+
                 ShowSummary = !string.IsNullOrEmpty(_summary);
 
                 NotifyOfPropertyChange("Summary");
@@ -113,20 +114,17 @@ namespace DomaMove.UI
         {
             var waitCursor = WaitCursor.Start();
 
-            Task.Factory.StartNew(() =>
-                {
-                    Task.WaitAll(Task.Factory.StartNew(() => Source.GetAllMaps()),
-                                 Task.Factory.StartNew(() => Target.GetAllMaps()));
-
-                    Target.TagAllExistingMapsAndSetTargetCategories(Source);
-                })
+            Task.Factory.StartNew(() => Task.WaitAll(Task.Factory.StartNew(() => Source.GetAllMaps()),
+                                                     Task.Factory.StartNew(() => Target.GetAllMaps())))
+                .ContinueWith(t => Target.TagAllExistingMapsAndSetTargetCategories(Source),
+                              TaskContinuationOptions.NotOnFaulted)
                 .ContinueWith(t =>
                     {
                         TransferMaps = new SelectionList<TransferMap>(Source.Maps);
-                        waitCursor.Stop();
                         Summary = Source.GetSummary();
                         MapsArePrepared = Source.Maps.Count > 0;
-                    }, TaskScheduler.FromCurrentSynchronizationContext());
+                    }, CancellationToken.None, TaskContinuationOptions.NotOnFaulted, TaskScheduler.FromCurrentSynchronizationContext())
+                .ContinueWith(t => waitCursor.Stop(), TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         public void TransferAll()
@@ -149,13 +147,12 @@ namespace DomaMove.UI
                 Task.Factory.StartNew(() =>
                     {
                         Target.UploadMaps(selectedMaps);
-                        _tracker.TransferCompleted(Target.TransferSuccessCount, Target.TransferSuccessFailed);
-
-                        foreach (var exception in Target.TransferExceptions)
-                        {
-                            _tracker.TransferException(exception);
-                        }
+                        _tracker.TransferCompleted(Target.TransferSuccessCount, Target.TransferSuccessFailed);                                           
                     })
+                    .ContinueWith(t =>
+                        {
+                            if (Target.TransferExceptions.Any()) _tracker.TransferException(Target.TransferExceptions);
+                        }, TaskScheduler.FromCurrentSynchronizationContext())
                     .ContinueWith(t => waitCursor.Stop(), TaskScheduler.FromCurrentSynchronizationContext());
             }
         }
