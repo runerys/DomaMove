@@ -66,42 +66,43 @@ namespace DomaMove.Engine
 
         private string _lastConnectionSettingsHash;
 
-        private async Task<bool> IsConnectionOk()
+        private bool IsConnectionOk
         {
-           
-            var connectionHash = _connectionSettings.GetHash();
-
-            if (connectionHash != _lastConnectionSettingsHash)
+            get
             {
-                await TestConnection();
-                _lastConnectionSettingsHash = connectionHash;
-            }
+                var connectionHash = _connectionSettings.GetHash();
 
-            return Status == "OK";
-            
+                if (connectionHash != _lastConnectionSettingsHash)
+                {
+                    TestConnection().Wait();
+                    _lastConnectionSettingsHash = connectionHash;
+                }
+
+                return Status == "OK";
+            }
         }
 
-        public async Task GetAllMaps()
+        public void GetAllMaps()
         {
-            if (!await IsConnectionOk())
+            if (!IsConnectionOk)
                 return;
 
             var doma = CreateDomaClient();
 
             var getAllCategoriesRequest = new GetAllCategoriesRequest { Username = Username, Password = Password };
-            var getCategoriesTask = doma.GetAllCategoriesAsync(getAllCategoriesRequest);
+            var getCategoriesTask = Task<GetAllCategoriesResponse>.Factory.FromAsync(doma.BeginGetAllCategories, doma.EndGetAllCategories, getAllCategoriesRequest, null);
 
             var getAllMapsRequest = new GetAllMapsRequest { Username = Username, Password = Password };
-            var getAllMapsTask = doma.GetAllMapsAsync(getAllMapsRequest);
+            var getAllMapsTask = Task<GetAllMapsResponse>.Factory.FromAsync(doma.BeginGetAllMaps, doma.EndGetAllMaps, getAllMapsRequest, null);
 
-            await Task.WhenAll(getCategoriesTask, getAllMapsTask);
+            Task.WaitAll(getCategoriesTask, getAllMapsTask);
 
-            Categories = (await getCategoriesTask).Categories.ToList();
+            Categories = getCategoriesTask.Result.Categories.ToList();
 
             var baseUri = GetBaseUri();
             var supportsBlankMapImage = SupportsPublishWithPreUpload;
 
-            Maps = (from map in (await getAllMapsTask).Maps
+            Maps = (from map in getAllMapsTask.Result.Maps
                     join category in Categories on map.CategoryID equals category.ID
                     select new TransferMap(category, map, supportsBlankMapImage, baseUri, _imageDownloader)).ToList();
 
@@ -118,49 +119,51 @@ namespace DomaMove.Engine
             return url;
         }
 
-        public async Task TestConnection()
+        public Task TestConnection()
         {
             var doma = CreateDomaClient();
 
             var connectRequest = new ConnectRequest { Username = Username, Password = Password };
+            var connectTask = Task<ConnectResponse>.Factory.FromAsync(doma.BeginConnect, doma.EndConnect, connectRequest, null);
 
-            try
-            {
-                var response = await doma.ConnectAsync(connectRequest);
+            var getResultTask = connectTask.ContinueWith(t =>
+                {
+                    if (t.Status == TaskStatus.Faulted)
+                    {
+                        Status = "FAILED";
+                        return;
+                    }
 
-                if (response.Success)
-                {
-                    Status = "OK";
-                    _supportsPublishWithPreUpload = response.Version != null && string.Compare(response.Version, "3.0", StringComparison.Ordinal) >= 0;
-                }
-                else
-                {
-                    Status = response.ErrorMessage;
-                }
-            }
-            catch (Exception)
-            {
-                Status = "FAILED";
-                return;
-            }                                  
+                    ConnectResponse response = t.Result;
+
+                    if (response.Success)
+                    {
+                        Status = "OK";
+                        _supportsPublishWithPreUpload = response.Version != null &&
+                                                    String.Compare(response.Version, "3.0", StringComparison.Ordinal) >= 0;
+                    }
+                    else
+                        Status = response.ErrorMessage;
+                });
+
+            return getResultTask;
         }
 
         private DOMAServicePortType CreateDomaClient()
         {
             return _clientFactory.Create(GetBaseUri() + "/webservice.php");
-        }        
+        }
 
-        public async Task UploadMaps(List<TransferMap> selectedMaps)
+        public void UploadMaps(List<TransferMap> selectedMaps)
         {
-            if (!await IsConnectionOk())
+            if (!IsConnectionOk)
                 return;
 
             _transferSuccessCount = 0;
             _transferFailedCount = selectedMaps.Count();
             _transferExceptions = new ConcurrentBag<Exception>();
 
-            foreach (var map in selectedMaps)  
-                await UploadMap(map);
+            Parallel.ForEach(selectedMaps, new ParallelOptions { MaxDegreeOfParallelism = _imageDownloader.ConnectionLimit }, UploadMap);
         }
 
         private int _transferSuccessCount;
@@ -174,7 +177,7 @@ namespace DomaMove.Engine
 
         public IEnumerable<Exception> TransferExceptions { get { return _transferExceptions.ToList(); } }
 
-        private async Task UploadMap(TransferMap transferMap)
+        private void UploadMap(TransferMap transferMap)
         {
             if (transferMap.ExistsOnTarget == true)
                 return;
@@ -197,20 +200,20 @@ namespace DomaMove.Engine
                     Comment = transferMap.MapInfo.Comment
                 };
 
-            await transferMap.DownloadImages();
+            transferMap.DownloadImages();
 
             if (transferMap.MapImage == null)
             {
                 transferMap.TransferStatus = "Map download failed.";
             }
 
-            if (SupportsPublishWithPreUpload)
+            if (transferMap.HasBlankMapImage && SupportsPublishWithPreUpload)
             {
-                await PublishWithPreUpload(transferMap, mapInfo);
+                PublishWithPreUpload(transferMap, mapInfo);
             }
             else
             {
-                await PublishMap(transferMap, mapInfo);
+                PublishMap(transferMap, mapInfo);
             }
         }
 
@@ -219,7 +222,7 @@ namespace DomaMove.Engine
             get { return _supportsPublishWithPreUpload.HasValue && _supportsPublishWithPreUpload == true; }
         }
 
-        private async Task PublishMap(TransferMap transferMap, MapInfo mapInfo)
+        private void PublishMap(TransferMap transferMap, MapInfo mapInfo)
         {         
             try
             {
@@ -227,7 +230,6 @@ namespace DomaMove.Engine
 
                 mapInfo.MapImageFileExtension = transferMap.FileExtension;
                 mapInfo.MapImageData = transferMap.MapImage;
-                mapInfo.BlankMapImageData = new byte[0];
 
                 transferMap.TransferStatus = "Publishing...";
 
@@ -237,27 +239,31 @@ namespace DomaMove.Engine
                         Username = Username,
                         Password = Password
                     };
+                var publishMapTask = Task<PublishMapResponse>.Factory.FromAsync(doma.BeginPublishMap, doma.EndPublishMap,
+                                                                                publishMapRequest, null);
 
-                try
-                {
-                    var response = await doma.PublishMapAsync(publishMapRequest);
-                   
-                    if (response.Success)
-                    {
-                        transferMap.TransferStatus = "Complete";
-                        transferMap.ExistsOnTarget = true;
-                    }
-                    else
-                    {
-                        transferMap.TransferStatus = response.ErrorMessage;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _transferExceptions.Add(ex);
+                publishMapTask.Wait();
 
-                    transferMap.TransferStatus = ex.Message;
+                if (publishMapTask.Status == TaskStatus.Faulted)
+                {
+                    _transferExceptions.Add(publishMapTask.Exception);
+
+                    transferMap.TransferStatus = publishMapTask.Exception != null
+                                                     ? publishMapTask.Exception.Message
+                                                     : "Failed";
                     return;
+                }
+
+                var response = publishMapTask.Result;
+
+                if (response.Success)
+                {
+                    transferMap.TransferStatus = "Complete";
+                    transferMap.ExistsOnTarget = true;
+                }
+                else
+                {
+                    transferMap.TransferStatus = response.ErrorMessage;
                 }
             }
             catch (AggregateException ae)
@@ -280,7 +286,7 @@ namespace DomaMove.Engine
             }
         }
 
-        private async Task PublishWithPreUpload(TransferMap transferMap, MapInfo mapInfo)
+        private void PublishWithPreUpload(TransferMap transferMap, MapInfo mapInfo)
         {          
             try
             {
@@ -289,16 +295,16 @@ namespace DomaMove.Engine
                 mapInfo.MapImageFileExtension = transferMap.FileExtension;
 
                 transferMap.TransferStatus = "Uploading...";
-               
-                var uploadedMap = await UploadPartialFile(transferMap.MapImage, transferMap.FileExtension, doma);
 
-                UploadPartialFileResponse uploadedBlankMap = null;
-                if (transferMap.HasBlankMapImage)
-                    uploadedBlankMap = await UploadPartialFile(transferMap.BlankImage, transferMap.FileExtension, doma);
+                var uploadMapTask = UploadPartialFile(transferMap.MapImage, transferMap.FileExtension, doma);
+                var uploadBlankMapTask = UploadPartialFile(transferMap.BlankImage, transferMap.FileExtension, doma);
+                var uploadThumbnailTask = UploadPartialFile(transferMap.ThumbnailImage, transferMap.FileExtension, doma);
 
-                var uploadedThumbnail = await UploadPartialFile(transferMap.ThumbnailImage, transferMap.FileExtension, doma);
+                var tasks = new Task[] { uploadMapTask, uploadBlankMapTask, uploadThumbnailTask };
 
-                if (new [] {uploadedMap, uploadedBlankMap, uploadedThumbnail }.Where(x => x != null).Any(x => !x.Success))
+                Task.WaitAll(tasks);
+
+                if (tasks.OfType<Task<UploadPartialFileResponse>>().Any(x => !x.Result.Success))
                 {
                     transferMap.TransferStatus = "Image upload failed";
                     return;
@@ -309,23 +315,18 @@ namespace DomaMove.Engine
                 var publishRequest = new PublishPreUploadedMapRequest
                     {
                         MapInfo = mapInfo,
-                        PreUploadedMapImageFileName = uploadedMap.FileName,
-                        PreUploadedThumbnailImageFileName = uploadedThumbnail.FileName,
+                        PreUploadedMapImageFileName = uploadMapTask.Result.FileName,
+                        PreUploadedBlankMapImageFileName = uploadBlankMapTask.Result.FileName,
+                        PreUploadedThumbnailImageFileName = uploadThumbnailTask.Result.FileName,
                         Username = Username,
                         Password = Password
                     };
 
-                if(uploadedBlankMap != null)
-                {
-                    publishRequest.PreUploadedBlankMapImageFileName = uploadedBlankMap.FileName;
-                }
+                var publishMapTask = Task<PublishPreUploadedMapResponse>.Factory.FromAsync(doma.BeginPublishPreUploadedMap, doma.EndPublishPreUploadedMap, publishRequest, null);
 
-                publishRequest.MapInfo.BlankMapImageData = new byte[0];
-                publishRequest.MapInfo.MapImageData = new byte[0];
+                publishMapTask.Wait();
 
-                var publishMapResponse = await doma.PublishPreUploadedMapAsync(publishRequest);
-
-                if (publishMapResponse.Success)
+                if (publishMapTask.Result.Success)
                 {
                     transferMap.TransferStatus = "Complete";
                     transferMap.ExistsOnTarget = true;
@@ -335,7 +336,7 @@ namespace DomaMove.Engine
                 }
                 else
                 {
-                    transferMap.TransferStatus = publishMapResponse.ErrorMessage;
+                    transferMap.TransferStatus = publishMapTask.Result.ErrorMessage;
                 }
             }
             catch (AggregateException ae)
@@ -357,39 +358,17 @@ namespace DomaMove.Engine
             }
         }
 
-        private async Task<UploadPartialFileResponse> UploadPartialFile(byte[] imageData, string fileExtension, DOMAServicePortType doma)
+        private Task<UploadPartialFileResponse> UploadPartialFile(byte[] image, string fileExtension, DOMAServicePortType doma)
         {
-            const int chunkSize = 512 * 1024; // 512 KB
-
-            string fileName = Guid.NewGuid().ToString() + "." + fileExtension;
-            int position = 0;
-
-            while (position < imageData.Length)
-            {
-                int length = Math.Min(chunkSize, imageData.Length - position);
-                var buffer = new byte[length];
-                Array.Copy(imageData, position, buffer, 0, length);
-                position += length;
-                var uploadPartialFileRequest = new UploadPartialFileRequest
+            var request = new UploadPartialFileRequest
                 {
+                    Data = image,
+                    FileName = Guid.NewGuid().ToString() + "." + fileExtension,
                     Username = Username,
-                    Password = Password,
-                    FileName = fileName,
-                    Data = buffer
+                    Password = Password
                 };
-                var uploadPartialFileResponse = await doma.UploadPartialFileAsync(uploadPartialFileRequest);
-                
-                if (!uploadPartialFileResponse.Success)
-                {
-                    return uploadPartialFileResponse;
-                }
-            }
 
-            return new UploadPartialFileResponse
-            {
-                Success = true,
-                FileName = fileName
-            };
+            return Task<UploadPartialFileResponse>.Factory.FromAsync(doma.BeginUploadPartialFile, doma.EndUploadPartialFile, request, null);
         }
 
         public void TagAllExistingMapsAndSetTargetCategories(DomaConnection source)

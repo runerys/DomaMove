@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Caliburn.Micro;
 using DomaMove.Doma;
 
@@ -34,24 +33,24 @@ namespace DomaMove.Engine
         public Category Category { get; private set; }
         public MapInfo MapInfo { get; private set; }
 
-        public async Task<byte[]> DownloadImage()
+        public byte[] DownloadImage()
         {
-            return await DownloadJpgWithFallbackToPng();
+            return DownloadJpgWithFallbackToPng();
         }
 
-        public async Task<byte[]> DownloadBlankImage()
+        public byte[] DownloadBlankImage()
         {
-            return await DownloadJpgWithFallbackToPng(".blank");
+            return DownloadJpgWithFallbackToPng(".blank");
         }
 
-        public async Task<byte[]> DownloadThumbnailImage()
+        public byte[] DownloadThumbnailImage()
         {
-            return await DownloadImage(GetUrl(".thumbnail", "jpg"));
+            return DownloadImage(GetUrl(".thumbnail", "jpg"));
         }
 
-        private async Task<byte[]> DownloadJpgWithFallbackToPng(string imageType = "")
+        private byte[] DownloadJpgWithFallbackToPng(string imageType = "")
         {
-            var image = await DownloadImage(GetUrl(imageType, "jpg"));
+            var image = DownloadImage(GetUrl(imageType, "jpg"));
 
             if (image != null)
             {
@@ -59,7 +58,7 @@ namespace DomaMove.Engine
                 return image;
             }
 
-            image = await DownloadImage(GetUrl(imageType, "png"));
+            image = DownloadImage(GetUrl(imageType, "png"));
 
             if (image != null)
             {
@@ -76,9 +75,9 @@ namespace DomaMove.Engine
             return string.Format("{0}/map_images/{1}{2}.{3}", _sourceBaseUri, MapInfo.ID, imageType, format);
         }
 
-        private async Task<byte[]> DownloadImage(string uri)
+        private byte[] DownloadImage(string uri)
         {
-            return await _imageDownloader.DownloadImage(uri);
+            return _imageDownloader.DownloadImage(uri);
         }   
 
         public byte[] MapImage { get; private set; }
@@ -104,19 +103,19 @@ namespace DomaMove.Engine
 
         public bool HasBlankMapImage { get { return BlankImage != null; } }
 
-        public async Task DownloadImages()
+        public void DownloadImages()
         {
             TransferStatus = "Downloading...";
 
             if (_sourceSupportsBlankImage)
             {
-                MapImage = await DownloadImage();
-                BlankImage = await DownloadBlankImage();
-                ThumbnailImage = await DownloadThumbnailImage();
+                MapImage = DownloadImage();
+                BlankImage = DownloadBlankImage();
+                ThumbnailImage = DownloadThumbnailImage();
             }
             else
             {
-                MapImage = await DownloadImage();
+                MapImage = DownloadImage();
             }
 
             TransferStatus = "Downloaded.";

@@ -1,0 +1,21 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "292ffe75-2415-4a7a-8e4f-584e2d38d59e": {
+      "ProjectGuid": "292ffe75-2415-4a7a-8e4f-584e2d38d59e",
+      "DisplayName": "DomaMove",
+      "ColorIndex": 0
+    },
+    "a2fe74e1-b743-11d0-ae1a-00a0c90fffc3": {
+      "ProjectGuid": "a2fe74e1-b743-11d0-ae1a-00a0c90fffc3",
+      "DisplayName": "Miscellaneous Files",
+      "ColorIndex": -1
+    },
+    "8e3b0114-0be4-4aad-af5f-db3f26e3fea8": {
+      "ProjectGuid": "8e3b0114-0be4-4aad-af5f-db3f26e3fea8",
+      "DisplayName": "DomaMove.Tests",
+      "ColorIndex": 1
+    }
+  },
+  "NextColorIndex": 2
+}

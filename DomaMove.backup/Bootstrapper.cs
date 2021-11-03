@@ -1,8 +1,6 @@
-﻿using System.ComponentModel;
-using System.Configuration;
+﻿using System.Configuration;
 using System.Globalization;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Windows;
 using System.Windows.Markup;
@@ -21,26 +19,13 @@ namespace DomaMove
         private ITracker _tracker;
         private bool _messageboxOnError;
 
-        private SimpleContainer container;
-
         public Bootstrapper()
+            : base(true)
         {
-            Initialize();
-        }
+            StartRuntime();
+        }        
 
-        protected override void Configure()
-        {
-            base.Configure();
-
-            container = new SimpleContainer();
-            container.Singleton<IWindowManager, WindowManager>();
-
-            Thread.CurrentThread.CurrentUICulture = Thread.CurrentThread.CurrentCulture;
-
-            FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
-        }
-
-        protected override async void OnStartup(object sender, StartupEventArgs e)
+        protected override void OnStartup(object sender, StartupEventArgs e)
         {
             base.OnStartup(sender, e);
 
@@ -49,8 +34,7 @@ namespace DomaMove
             _targetSettings = _settingsStorage.Load(Role.Target);
 
             var domaClientFactory = new DomaClientFactory();
-            var httpClient = new HttpClient();
-            var imageDownloader = new ImageDownloader(httpClient);
+            var imageDownloader = new ImageDownloader();
 
             var source = new DomaConnection(domaClientFactory, imageDownloader, _sourceSettings);
             var target = new DomaConnection(domaClientFactory, imageDownloader, _targetSettings);
@@ -65,10 +49,9 @@ namespace DomaMove
                 _messageboxOnError = true;
 
             var transferViewModel = new MoveViewModel(source, target, _tracker);
+            var windowManager = (WindowManager)GetInstance(typeof(WindowManager), null);
 
-            var windowManager = (IWindowManager)GetInstance(typeof(IWindowManager), null);
-
-            await windowManager.ShowWindowAsync(transferViewModel);
+            windowManager.ShowWindow(transferViewModel);
         }
 
         protected override void OnExit(object sender, System.EventArgs e)
@@ -85,9 +68,17 @@ namespace DomaMove
             base.OnExit(sender, e);
         }
 
+        protected override void Configure()
+        {
+            base.Configure();
+            Thread.CurrentThread.CurrentUICulture = Thread.CurrentThread.CurrentCulture;
+
+            FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
+        }
+
         protected override void OnUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
-            if (_messageboxOnError)
+            if(_messageboxOnError)
                 MessageBox.Show(e.ToString());
 
             _tracker.UnhandledException(e.Exception);

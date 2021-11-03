@@ -26,24 +26,24 @@ namespace DomaMove.UI
             Target = target;
         }
 
-        protected override async Task OnInitializeAsync(CancellationToken cancellationToken)
+        protected override void OnInitialize()
         {
             DisplayName = "Transfer Doma Maps";
             _tracker.Startup();
 
             TransferMaps = new SelectionList<TransferMap>(new List<TransferMap>());
 
-            await base.OnInitializeAsync(cancellationToken);
+            base.OnInitialize();
         }
 
-        protected override async Task OnDeactivateAsync(bool close, CancellationToken cancellationToken)
+        protected override void OnDeactivate(bool close)
         {
             if (close)
             {
                 _tracker.Shutdown();
             }
 
-            await base.OnDeactivateAsync(close, cancellationToken);
+            base.OnDeactivate(close);
         }
 
         public string Summary
@@ -110,36 +110,30 @@ namespace DomaMove.UI
             }
         }
 
-        public async Task GetMaps()
+        public void GetMaps()
         {
             var waitCursor = WaitCursor.Start();
 
-            try
-            {
-                var sourceMaps = Source.GetAllMaps();
-                var targetMaps = Target.GetAllMaps();
-
-                await Task.WhenAll(sourceMaps, targetMaps);
-
-                Target.TagAllExistingMapsAndSetTargetCategories(Source);
-
-                TransferMaps = new SelectionList<TransferMap>(Source.Maps);
-                Summary = Source.GetSummary();
-                MapsArePrepared = Source.Maps.Count > 0;
-            }           
-            finally
-            {
-                waitCursor.Stop();
-            }         
+            Task.Factory.StartNew(() => Task.WaitAll(Task.Factory.StartNew(() => Source.GetAllMaps()),
+                                                     Task.Factory.StartNew(() => Target.GetAllMaps())))
+                .ContinueWith(t => Target.TagAllExistingMapsAndSetTargetCategories(Source),
+                              TaskContinuationOptions.NotOnFaulted)
+                .ContinueWith(t =>
+                    {
+                        TransferMaps = new SelectionList<TransferMap>(Source.Maps);
+                        Summary = Source.GetSummary();
+                        MapsArePrepared = Source.Maps.Count > 0;
+                    }, CancellationToken.None, TaskContinuationOptions.NotOnFaulted, TaskScheduler.FromCurrentSynchronizationContext())
+                .ContinueWith(t => waitCursor.Stop(), TaskScheduler.FromCurrentSynchronizationContext());
         }
 
-        public async Task TransferAll()
+        public void TransferAll()
         {
             TransferMaps.SelectAll();
-            await TransferSelected();
+            TransferSelected();
         }
 
-        public async Task TransferSelected()
+        public void TransferSelected()
         {
             var selectedMaps = TransferMaps.SelectedItems.ToList();
 
@@ -150,18 +144,16 @@ namespace DomaMove.UI
 
                 var waitCursor = WaitCursor.Start();
 
-                try
-                {
-                    await Target.UploadMaps(selectedMaps);
-                    _tracker.TransferCompleted(Target.TransferSuccessCount, Target.TransferSuccessFailed);
-
-                    if (Target.TransferExceptions.Any()) 
-                        _tracker.TransferException(Target.TransferExceptions);
-                }
-                finally 
-                {
-                    waitCursor.Stop(); 
-                }               
+                Task.Factory.StartNew(() =>
+                    {
+                        Target.UploadMaps(selectedMaps);
+                        _tracker.TransferCompleted(Target.TransferSuccessCount, Target.TransferSuccessFailed);                                           
+                    })
+                    .ContinueWith(t =>
+                        {
+                            if (Target.TransferExceptions.Any()) _tracker.TransferException(Target.TransferExceptions);
+                        }, TaskScheduler.FromCurrentSynchronizationContext())
+                    .ContinueWith(t => waitCursor.Stop(), TaskScheduler.FromCurrentSynchronizationContext());
             }
         }
 

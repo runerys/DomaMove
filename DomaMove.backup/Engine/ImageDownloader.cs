@@ -1,33 +1,22 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
 
 namespace DomaMove.Engine
 {
     public class ImageDownloader
     {
-        private HttpClient _httpClient;
-
-        public ImageDownloader(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
-
         public virtual int ConnectionLimit
         {
             get { return ServicePointManager.DefaultConnectionLimit; }
         }
 
-        public async Task<byte[]> DownloadImage(string uri)
+        public virtual byte[] DownloadImage(string uri)
         {
             try
             {
-                using var request = new HttpRequestMessage(HttpMethod.Get, uri);
-
-                using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+                var request = (HttpWebRequest)WebRequest.Create(uri);
+                var response = (HttpWebResponse)request.GetResponse();
 
                 if (response.StatusCode == HttpStatusCode.NotFound)
                     return null;
@@ -40,10 +29,10 @@ namespace DomaMove.Engine
                 if ((response.StatusCode == HttpStatusCode.OK ||
                      response.StatusCode == HttpStatusCode.Moved ||
                      response.StatusCode == HttpStatusCode.Redirect) &&
-                    response.Content.Headers.ContentType.MediaType.StartsWith("image", StringComparison.OrdinalIgnoreCase))
+                    response.ContentType.StartsWith("image", StringComparison.OrdinalIgnoreCase))
                 {
                     // if the remote file was found, download it
-                    using (var inputStream = await response.Content.ReadAsStreamAsync())
+                    using (var inputStream = response.GetResponseStream())
                     using (var outputStream = new MemoryStream())
                     {
                         if (inputStream == null)

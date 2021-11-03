@@ -1,0 +1,76 @@
+﻿<UserControl x:Class="DomaMove.UI.MoveView"
+              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:w="clr-namespace:DomaMove.Wpf"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="1200" MinHeight="600" MaxWidth="1500" MaxHeight="1000"  Padding="20">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    </UserControl.Resources>
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top">
+            <GroupBox Header="Source" Padding="5">
+                <StackPanel Orientation="Horizontal">
+                    <Label>Address</Label>                  
+                    <TextBox x:Name="Source_Settings_Url" Width="350" Margin="10,0,0,0"/>
+                    <Label Content="/webservice.php" Padding="0,0,10,0" />
+                    <Label>User</Label>
+                    <TextBox x:Name="Source_Settings_User" Width="100" />
+                    <Label>Password</Label>
+                    <PasswordBox Width="100" PasswordChar="*" w:PasswordHelper.Attach="True" w:PasswordHelper.Password="{Binding Source.Settings.Password, Mode=TwoWay}"/>
+                    <!--<Button x:Name="TestSourceConnection" Content="Test" Margin="10"/>-->
+                    <Label x:Name="Source_Status" />
+                </StackPanel>
+            </GroupBox>
+            <GroupBox Header="Target" Padding="5" Margin="0,10">
+                <StackPanel Orientation="Horizontal">
+                    <Label>Address</Label>
+                    <TextBox x:Name="Target_Settings_Url" Width="350" Margin="10,0,0,0"/>
+                    <Label Content="/webservice.php" Padding="0,0,10,0" />
+                    <Label>User</Label>
+                    <TextBox x:Name="Target_Settings_User" Width="100" />
+                    <Label>Password</Label>
+                    <PasswordBox Width="100" PasswordChar="*" w:PasswordHelper.Attach="True" w:PasswordHelper.Password="{Binding Target.Settings.Password, Mode=TwoWay}"/>
+                    <!--<Button x:Name="TestTargetConnection" Content="Test" Margin="10" />-->
+                    <Label x:Name="Target_Status" />
+                </StackPanel>
+            </GroupBox>
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="GetMaps" Content="Get map list" />
+            </StackPanel>
+        </StackPanel>
+        <DockPanel Visibility="{Binding MapsArePrepared, Converter={StaticResource BoolToVisibilityConverter}}">
+            <StackPanel DockPanel.Dock="Top">
+                <Label x:Name="Summary" Visibility="{Binding ShowSummary, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <Button x:Name="TransferAll" Content="OK, transfer all my maps!" />
+                    <Label Content="OR" Margin="10"/>
+                    <Button x:Name="TransferSelected" Content="Only transfer the selected maps, please!" />
+                    <Label Content="(Click the rows. Hold Ctrl to multiselect)" />
+                </StackPanel>
+            </StackPanel>
+            <DataGrid x:Name="TransferMaps" AutoGenerateColumns="False" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                <DataGrid.ItemContainerStyle>
+                    <Style TargetType="{x:Type DataGridRow}">
+                        <Setter Property="IsSelected" Value="{Binding IsSelected}"/>
+                    </Style>
+                </DataGrid.ItemContainerStyle>
+                <DataGrid.Columns>                    
+                    <DataGridTextColumn Header="Date" Binding="{Binding Path=Item.MapInfo.Date}" IsReadOnly = "True"/>
+                    <DataGridTextColumn Header="Name" Binding="{Binding Path=Item.MapInfo.Name}" IsReadOnly = "True"/>
+                    <DataGridTextColumn Header="Exists on Target" Binding="{w:SwitchBinding Item.ExistsOnTarget, Yes, ''}" IsReadOnly = "True">
+                        <DataGridTextColumn.CellStyle>
+                            <Style>
+                                <Setter Property="TextBlock.TextAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Category" Binding="{Binding Path=Item.Category.Name}" IsReadOnly = "True" />
+                    <DataGridTextColumn Header="Target Category" Binding="{Binding Path=Item.TargetCategory.Name}" IsReadOnly = "True" />                                      
+                    <DataGridTextColumn Header="Transfer Status" Binding="{Binding Path=Item.TransferStatus}" IsReadOnly = "True" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
+    </DockPanel>
+</UserControl>
